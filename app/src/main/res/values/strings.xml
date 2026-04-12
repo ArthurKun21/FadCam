@@ -2033,7 +2033,7 @@ For the smoothest playback experience, you can use an external player like VLC. 
     
     <!-- Remote Security -->
     <string name="battery_estimate_title">Estimated Streaming Time Remaining</string>
-    <string name="battery_estimate_disclaimer">Estimate based on real-world test: 8 hours continuous live streaming consumed 61% battery (~7.6% per hour) with FadCam running in background and screen off</string>
+    <string name="battery_estimate_disclaimer">Estimate based on real-world test: 8 hours continuous live streaming consumed 61% battery (~7.6% per hour) on a 5000mAh device. Example: At 100% battery, you\'d have ~13 hours. With FadCam running in background and screen off</string>
     <string name="remote_security_title">Remote Security</string>
     <string name="remote_security_enable">Enable Authentication</string>
     <string name="remote_security_enable_desc">Require password to access remote web interface</string>
