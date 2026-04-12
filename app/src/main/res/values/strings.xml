@@ -1052,7 +1052,6 @@
     <string name="faditor_exporting_percent">Exporting… %1$d%%</string>
     <string name="faditor_export_success">Video exported successfully</string>
     <string name="faditor_export_error">Export failed: %1$s</string>
-    <string name="faditor_export_cancelled">Export cancelled</string>
     <string name="faditor_export_in_progress">Export already in progress</string>
     <string name="faditor_remuxing">Optimizing for preview…</string>
     <string name="faditor_remuxing_percent">Optimizing… %1$ds processed</string>
@@ -1126,6 +1125,19 @@
     <string name="faditor_export_notif_channel_desc">Notifications for ongoing video exports</string>
     <string name="faditor_export_notif_title">Exporting video…</string>
     <string name="faditor_export_notif_error_title">Export Failed</string>
+
+    <!-- Export dock (Faditor Mini tab) -->
+    <string name="faditor_export_progress">Exporting…</string>
+    <string name="faditor_export_completed">Export Complete</string>
+    <string name="faditor_export_cancelled">Export Cancelled</string>
+    <string name="faditor_export_failed">Export Failed</string>
+    <string name="export_eta_seconds">ETA %d s</string>
+    <string name="export_eta_minutes">ETA %d m</string>
+    <string name="export_eta_hours">ETA %d h</string>
+    <string name="export_complete">Complete</string>
+    <string name="export_file_size">%s</string>
+    <string name="export_error_hint">Tap to dismiss</string>
+    <string name="export_status">Export Status</string>
 
     <!-- Export info on export screen -->
     <string name="faditor_export_info">%1$s • %2$d clip(s)%3$s • H.264 + AAC</string>
