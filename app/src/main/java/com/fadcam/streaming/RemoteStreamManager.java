@@ -1457,26 +1457,22 @@ public class RemoteStreamManager {
         double remainingHours = 0;
         String warning = "";
         
-        // Calculate consumption and estimate remaining time if streaming
-        if (streamingEnabled && streamStartBatteryLevel != -1 && serverStartTime > 0) {
-            consumed = (int) (streamStartBatteryLevel - currentLevel);
-            if (consumed >= 0) {
-                // Estimate remaining streaming time
-                long streamingDurationMs = System.currentTimeMillis() - serverStartTime;
-                if (streamingDurationMs > 60000) { // At least 1 minute of streaming
-                    double consumptionRate = consumed / (streamingDurationMs / 3600000.0); // % per hour
-                    if (consumptionRate > 0) {
-                        remainingHours = currentLevel / consumptionRate;
-                        if (remainingHours >= 500) { // Set to -1 if unreasonable
-                            remainingHours = currentLevel; // Fallback: estimate conservatively
-                        }
-                    } else {
-                        remainingHours = currentLevel; // No consumption yet
-                    }
-                } else {
-                    remainingHours = currentLevel; // Less than 1 minute
-                }
+        // Based on real-world test: 8 hours continuous live streaming = 61% battery drain
+        // Consumption rate: 61 / 8 = 7.625% per hour
+        final double CONSUMPTION_RATE_PER_HOUR = 7.625;
+        
+        // Always calculate remaining time based on current battery level
+        if (currentLevel > 0) {
+            remainingHours = currentLevel / CONSUMPTION_RATE_PER_HOUR;
+            // Cap unreasonable values
+            if (remainingHours > 500) {
+                remainingHours = 500; // Max estimate: ~500+ hours
             }
+        }
+        
+        // Track battery consumed from app start if we need it for other metrics
+        if (appStartBatteryLevel != -1 && currentLevel <= appStartBatteryLevel) {
+            consumed = (int) (appStartBatteryLevel - currentLevel);
         }
         
         // Get configured battery warning threshold from SharedPreferencesManager

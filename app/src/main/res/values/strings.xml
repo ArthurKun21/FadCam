@@ -1980,7 +1980,7 @@ For the smoothest playback experience, you can use an external player like VLC. 
     <string name="stream_active">Active</string>
     <string name="stream_inactive">Server inactive :(</string>
     <string name="stream_idle">Idle - Start recording to stream</string>
-    <string name="stream_start_server">Start Server</string>
+    <string name="stream_start_server">Stream Server</string>
     <string name="stream_url_label">Stream URL</string>
     <string name="stream_copy_url">Copy URL</string>
     <string name="stream_url_copied">Stream URL copied to clipboard</string>
@@ -2032,6 +2032,8 @@ For the smoothest playback experience, you can use an external player like VLC. 
     <string name="stream_network_info">Same WiFi network required for streaming</string>
     
     <!-- Remote Security -->
+    <string name="battery_estimate_title">Estimated Streaming Time Remaining</string>
+    <string name="battery_estimate_disclaimer">Estimate based on real-world test: 8 hours continuous live streaming consumed 61% battery (~7.6% per hour) with FadCam running in background and screen off</string>
     <string name="remote_security_title">Remote Security</string>
     <string name="remote_security_enable">Enable Authentication</string>
     <string name="remote_security_enable_desc">Require password to access remote web interface</string>

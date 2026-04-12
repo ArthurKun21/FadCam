@@ -95,16 +95,17 @@ public class BatteryInfoBottomSheet extends BottomSheetDialogFragment {
                 consumptionCard.setVisibility(View.GONE);
             }
             
-            // Show time remaining if available
+            // Show time remaining - ALWAYS show now (based on tested formula)
+            timeRemainingCard.setVisibility(View.VISIBLE);
             if (remainingHours > 0) {
-                timeRemainingCard.setVisibility(View.VISIBLE);
                 if (remainingHours < 500) {
                     timeRemaining.setText(String.format("~%.1f hours remaining", remainingHours));
                 } else {
                     timeRemaining.setText("~" + (int)remainingHours + "h+ remaining");
                 }
             } else {
-                timeRemainingCard.setVisibility(View.GONE);
+                // Fallback if calculation failed
+                timeRemaining.setText("Unable to calculate");
             }
             
             // Show low battery warning if needed
