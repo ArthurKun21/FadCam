@@ -5983,30 +5983,39 @@ public class RecordingService extends Service {
                     FLog.i(TAG, "📺 STREAM_ONLY (SAF rollover): Tracking temp URI: " + safUri);
                 }
                 
-                // ⚠️ CRITICAL FIX v2: Defer closing old PFD until muxer is completely done
-                // Timeline:
-                // 1. onSegmentRollover(N) called - GL pipeline switches to new segment
-                // 2. Old muxer (segment N-1) still needs its PFD for async finalization
-                // 3. onSegmentRollover(N+1) called - NOW it's safe to close segment N-1's PFD
-                //    because GLRecordingPipeline has already completed rollover for segment N
-                
-                // Close the PREVIOUS segment's PFD (segment N-1)
-                // Safe because GL pipeline finished handling it during the last transition
-                if (previousSegmentParcelFileDescriptor != null) {
-                    try {
-                        previousSegmentParcelFileDescriptor.close();
-                        FLog.d(TAG, "Closed previous-previous segment's ParcelFileDescriptor (deferred close)");
-                    } catch (Exception e) {
-                        FLog.w(TAG, "Error closing deferred PFD", e);
-                    }
-                    previousSegmentParcelFileDescriptor = null;
+                // SAMSUNG SAF FIX: The GL pipeline now fully stops and releases the old muxer
+                // BEFORE invoking this callback (see GLRecordingPipeline.rolloverSegment()).
+                // That means muxer.close() has already returned synchronously — all
+                // handleProcessedSegment() writes are done and the old fd is no longer in use.
+                //
+                // We can therefore close the old PFD immediately, right here, BEFORE opening
+                // the new one.  This eliminates the concurrent-open window that causes Samsung's
+                // SAF ExternalStorageProvider to invalidate the new PFD on first write (EBADF).
+                //
+                // On the FIRST rollover the initial segment's PFD lives in safRecordingPfd
+                // (not in currentSegmentParcelFileDescriptor), so we must check both.
+                ParcelFileDescriptor oldPfd;
+                if (currentSegmentParcelFileDescriptor != null) {
+                    oldPfd = currentSegmentParcelFileDescriptor;
+                    currentSegmentParcelFileDescriptor = null;
+                } else {
+                    // First rollover: initial segment PFD was stored in safRecordingPfd
+                    oldPfd = safRecordingPfd;
+                    safRecordingPfd = null;
                 }
+                if (oldPfd != null) {
+                    try {
+                        oldPfd.close();
+                        FLog.d(TAG, "Closed old segment PFD before opening new one (next segment=" + nextSegmentNumber + ")");
+                    } catch (Exception e) {
+                        FLog.w(TAG, "Error closing old segment PFD", e);
+                    }
+                }
+                // previousSegmentParcelFileDescriptor is no longer used by this deferred-close
+                // path (old muxer is done before we get here), but null it out for safety.
+                previousSegmentParcelFileDescriptor = null;
                 
-                // Move current PFD to previous before opening new one
-                previousSegmentParcelFileDescriptor = currentSegmentParcelFileDescriptor;
-                currentSegmentParcelFileDescriptor = null;
-                
-                // Now open the new PFD for the new segment
+                // Open the new PFD now that the old one is fully closed (no concurrent-open conflict)
                 try {
                     ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(safUri, "w");
                     if (pfd == null) {

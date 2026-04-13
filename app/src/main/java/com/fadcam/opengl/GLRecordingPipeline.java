@@ -1745,12 +1745,41 @@ public class GLRecordingPipeline {
             }
             rolloverInProgress = true;
 
-            // First, request the next segment file/descriptor from callback
-            // This is done first to ensure we have a valid output before stopping the
-            // current muxer
             segmentNumber++;
             FLog.d(TAG, "Increment segment number to: " + segmentNumber);
 
+            // Stop and release the current muxer BEFORE invoking the segment callback.
+            //
+            // SAMSUNG SAF FIX: On Samsung Galaxy devices, the SAF ExternalStorageProvider
+            // invalidates a newly-opened ParcelFileDescriptor ("w") when any other fd for
+            // the same storage volume is concurrently open. The old segment's PFD cannot be
+            // closed until the old muxer has fully flushed its final fragment (muxer.close()
+            // is synchronous — all handleProcessedSegment() writes complete before it returns).
+            //
+            // By fully stopping and releasing the old muxer HERE, the callback can safely
+            // close the old PFD and then open the new PFD with no concurrent-open conflict,
+            // guaranteeing the new fd is valid for the very first write.
+            if (mediaMuxer != null) {
+                try {
+                    if (muxerStarted) {
+                        FLog.d(TAG, "Stopping current muxer before segment callback");
+                        mediaMuxer.stop();
+                    }
+                    FLog.d(TAG, "Releasing current muxer before segment callback");
+                    mediaMuxer.release();
+                } catch (Exception e) {
+                    FLog.e(TAG, "Error releasing muxer during rollover", e);
+                }
+                mediaMuxer = null;
+                muxerStarted = false;
+            }
+
+            // Reset track indices
+            audioTrackIndex = -1;
+
+            // Now invoke the callback. The old muxer is fully stopped, so the callback
+            // may safely close the old PFD and open a fresh one without any concurrent-open
+            // conflict on Samsung (or any other SAF provider).
             if (segmentCallback != null) {
                 FLog.d(TAG, "Calling segment callback for next segment");
                 segmentCallback.onSegmentRollover(segmentNumber);
@@ -1764,25 +1793,6 @@ public class GLRecordingPipeline {
                 FLog.e(TAG, "Segment callback did not set new output path or descriptor");
                 throw new IllegalStateException("No output path or descriptor set after callback");
             }
-
-            // Now we can safely stop and release the current muxer
-            if (mediaMuxer != null) {
-                try {
-                    if (muxerStarted) {
-                        FLog.d(TAG, "Stopping current muxer");
-                        mediaMuxer.stop();
-                    }
-                    FLog.d(TAG, "Releasing current muxer");
-                    mediaMuxer.release();
-                } catch (Exception e) {
-                    FLog.e(TAG, "Error releasing muxer during rollover", e);
-                }
-                mediaMuxer = null;
-                muxerStarted = false;
-            }
-
-            // Reset track indices
-            audioTrackIndex = -1;
 
             try {
                 // Create new muxer for the next segment
