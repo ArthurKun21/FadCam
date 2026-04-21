@@ -1764,6 +1764,7 @@ public class RecordingService extends Service {
         try {
             com.fadcam.streaming.RemoteStreamManager.getInstance().stopRecording();
             FLog.i(TAG, "🛑 RemoteStreamManager notified: recording stopped");
+            
         } catch (Exception e) {
             FLog.e(TAG, "Failed to notify RemoteStreamManager about recording stop", e);
         }
@@ -1981,6 +1982,7 @@ public class RecordingService extends Service {
         sharedPreferencesManager.setRecordingInProgress(false);
         // Notify RemoteStreamManager so status JSON reflects paused state
         com.fadcam.streaming.RemoteStreamManager.getInstance().pauseRecording();
+        
         setupRecordingResumeNotification();
         showRecordingInPausedToast();
         broadcastOnRecordingPaused();
@@ -2000,6 +2002,7 @@ public class RecordingService extends Service {
         sharedPreferencesManager.setRecordingInProgress(true);
         // Notify RemoteStreamManager so status JSON reflects resumed (recording) state
         com.fadcam.streaming.RemoteStreamManager.getInstance().resumeRecording();
+        
         setupRecordingInProgressNotification();
         showRecordingResumedToast();
         broadcastOnRecordingResumed();
@@ -6316,6 +6319,7 @@ public class RecordingService extends Service {
                     // SAF mode: no File object available, use flag-based notification
                     com.fadcam.streaming.RemoteStreamManager.getInstance().startRecordingSaf();
                 }
+                
             } catch (Exception e) {
                 FLog.e(TAG, "Failed to notify RemoteStreamManager about recording start", e);
             }
