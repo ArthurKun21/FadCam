@@ -186,6 +186,9 @@ public class GLRecordingPipeline {
     private MediaFormat cachedAudioFormat;
     // Audio settings (always set from preferences or app defaults)
     private int audioSource;
+    private android.media.AudioDeviceInfo preferredAudioDevice;
+    private boolean isBtSco;
+    private android.media.AudioManager savedAudioManager;
     private int audioSampleRate;
     private int audioBitrate;
     private int audioChannelCount;
@@ -2044,6 +2047,16 @@ public class GLRecordingPipeline {
                     FLog.i(TAG, "AudioManager mode restored to: " + originalAudioMode);
                 }
                 audioManager.setSpeakerphoneOn(originalSpeakerphoneOn);
+                // Stop BT SCO if it was started
+                if (isBtSco) {
+                    try {
+                        audioManager.stopBluetoothSco();
+                        audioManager.setBluetoothScoOn(false);
+                        FLog.i(TAG, "BT SCO stopped and released");
+                    } catch (Exception e) {
+                        FLog.w(TAG, "Error stopping BT SCO", e);
+                    }
+                }
                 FLog.i(TAG, "Speakerphone restored to: " + originalSpeakerphoneOn);
                 
                 // Release audio focus
@@ -2594,14 +2607,69 @@ public class GLRecordingPipeline {
         this.audioRecordingEnabled = prefs.isRecordAudioEnabled();
         this.audioBitrate = prefs.getAudioBitrate();
         this.audioSampleRate = prefs.getAudioSamplingRate();
-        // Always use stereo (2 channels) for best quality
         this.audioChannelCount = 2;
-        // Audio source selection logic (default to MIC)
-        String audioInputSource = null;
-        // Use CAMCORDER for high-quality audio recording
-        // This provides better audio quality than VOICE_COMMUNICATION
-        // Background recording is enabled via foreground service with MICROPHONE type
-        this.audioSource = android.media.MediaRecorder.AudioSource.CAMCORDER;
+
+        String audioInputSource = prefs.getAudioInputSource();
+        this.preferredAudioDevice = null;
+        this.isBtSco = false;
+        this.savedAudioManager = null;
+
+        if (com.fadcam.SharedPreferencesManager.AUDIO_INPUT_SOURCE_WIRED.equals(audioInputSource)) {
+            int savedDeviceType = prefs.getAudioInputDeviceType();
+            android.media.AudioManager am = (android.media.AudioManager)
+                    context.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                android.media.AudioDeviceInfo[] devices = am.getDevices(android.media.AudioManager.GET_DEVICES_INPUTS);
+                if (devices != null) {
+                    for (android.media.AudioDeviceInfo device : devices) {
+                        if (device == null) continue;
+                        int type = device.getType();
+                        if (isExternalInputDevice(type)) {
+                            if (savedDeviceType == -1 || type == savedDeviceType) {
+                                this.preferredAudioDevice = device;
+                                this.isBtSco = (type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+                                        || type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                                        || type == android.media.AudioDeviceInfo.TYPE_BLE_HEADSET);
+                                FLog.i(TAG, "External audio device matched: " + device.getProductName()
+                                        + " (type=" + type + ", btSco=" + this.isBtSco + ")");
+                                break;
+                            }
+                        }
+                    }
+                }
+                // Fallback: if saved type not found, pick first available external device
+                if (this.preferredAudioDevice == null && devices != null) {
+                    for (android.media.AudioDeviceInfo device : devices) {
+                        if (device != null && isExternalInputDevice(device.getType())) {
+                            this.preferredAudioDevice = device;
+                            this.isBtSco = (device.getType() == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+                                    || device.getType() == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                                    || device.getType() == android.media.AudioDeviceInfo.TYPE_BLE_HEADSET);
+                            FLog.i(TAG, "External audio device (fallback): " + device.getProductName()
+                                    + " (type=" + device.getType() + ")");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (this.preferredAudioDevice != null) {
+            this.audioSource = android.media.MediaRecorder.AudioSource.MIC;
+            FLog.i(TAG, "Audio source: MIC (external device route)");
+        } else {
+            this.audioSource = android.media.MediaRecorder.AudioSource.CAMCORDER;
+            FLog.i(TAG, "Audio source: CAMCORDER (default device mic)");
+        }
+    }
+
+    private boolean isExternalInputDevice(int type) {
+        return type == android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET
+                || type == android.media.AudioDeviceInfo.TYPE_USB_DEVICE
+                || type == android.media.AudioDeviceInfo.TYPE_USB_HEADSET
+                || type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_SCO
+                || type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                || type == android.media.AudioDeviceInfo.TYPE_BLE_HEADSET;
     }
 
     /**
@@ -2682,6 +2750,11 @@ public class GLRecordingPipeline {
                     .setBufferSizeInBytes(bufferSize)
                     .build();
 
+            if (preferredAudioDevice != null) {
+                boolean routed = audioRecord.setPreferredDevice(preferredAudioDevice);
+                FLog.i(TAG, "setPreferredDevice -> " + preferredAudioDevice.getProductName() + ": " + (routed ? "SUCCESS" : "FAILED"));
+            }
+
             if (audioRecord.getState() != android.media.AudioRecord.STATE_INITIALIZED) {
                 throw new RuntimeException("AudioRecord initialization failed");
             }
@@ -2699,19 +2772,25 @@ public class GLRecordingPipeline {
                 FLog.w(TAG, "NoiseSuppressor requested but not available on this device");
             }
 
-            // CRITICAL: Set AudioManager mode to MODE_NORMAL for camcorder recording
-            // This allows normal audio routing and prevents earpiece-only behavior
+            // CRITICAL: Set AudioManager mode for recording
             audioManager = (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+            savedAudioManager = audioManager;
             if (audioManager != null) {
-                // Save original mode and speakerphone state to restore later
                 originalAudioMode = audioManager.getMode();
                 originalSpeakerphoneOn = audioManager.isSpeakerphoneOn();
-                
-                // Set MODE_NORMAL for camcorder recording - allows normal speaker output
-                audioManager.setMode(android.media.AudioManager.MODE_NORMAL);
-                // Explicitly enable speakerphone for normal audio routing
-                audioManager.setSpeakerphoneOn(true);
-                FLog.i(TAG, "AudioManager mode set to MODE_NORMAL for camcorder recording (was: " + originalAudioMode + "), speakerphone enabled (was: " + originalSpeakerphoneOn + ")");
+
+                if (isBtSco) {
+                    // BT SCO requires special setup: start SCO connection and set mode
+                    audioManager.startBluetoothSco();
+                    audioManager.setBluetoothScoOn(true);
+                    audioManager.setMode(android.media.AudioManager.MODE_IN_COMMUNICATION);
+                    audioManager.setSpeakerphoneOn(false);
+                    FLog.i(TAG, "AudioManager: BT SCO started, mode=MODE_IN_COMMUNICATION");
+                } else {
+                    audioManager.setMode(android.media.AudioManager.MODE_NORMAL);
+                    audioManager.setSpeakerphoneOn(true);
+                    FLog.i(TAG, "AudioManager mode set to MODE_NORMAL for camcorder recording (was: " + originalAudioMode + "), speakerphone enabled");
+                }
                 
                 // Request audio focus with USAGE_MEDIA for camcorder recording
                 audioFocusListener = focusChange -> {
