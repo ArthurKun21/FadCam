@@ -479,6 +479,7 @@ public class HomeFragment extends BaseFragment {
     private boolean isTorchOn = false;
 
     private BroadcastReceiver torchReceiver;
+    private GpsProviderReceiver gpsProviderReceiver;
 
     private Surface textureViewSurface; // To hold the Surface from TextureView
 
@@ -5289,6 +5290,13 @@ public class HomeFragment extends BaseFragment {
         banner.setVisibility(gpsOn ? View.GONE : View.VISIBLE);
     }
 
+    private class GpsProviderReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateGpsWarningBanner();
+        }
+    }
+
     private void startRecording() {
         if (getContext() == null) {
             FLog.e(TAG, "Context is null, cannot start recording.");
@@ -8908,6 +8916,14 @@ public class HomeFragment extends BaseFragment {
         stopBubbleRotation(); // calls stopHomeBlinkLoop + breathing + floating
         stopHeaderBlinkLoop(); // clean up header logo blink loop
         
+        // Unregister GPS provider change receiver
+        if (gpsProviderReceiver != null) {
+            try {
+                requireContext().unregisterReceiver(gpsProviderReceiver);
+            } catch (IllegalArgumentException ignored) {}
+            gpsProviderReceiver = null;
+        }
+        
         super.onDestroyView();
         TorchService.setHomeFragment(null);
 
@@ -9887,6 +9903,11 @@ public class HomeFragment extends BaseFragment {
             btnDismissGpsBanner.setOnClickListener(v -> bannerGpsWarning.setVisibility(View.GONE));
         }
         updateGpsWarningBanner();
+
+        // Register GPS provider change listener for real-time banner updates
+        gpsProviderReceiver = new GpsProviderReceiver();
+        IntentFilter gpsFilter = new IntentFilter(android.location.LocationManager.PROVIDERS_CHANGED_ACTION);
+        requireContext().registerReceiver(gpsProviderReceiver, gpsFilter);
 
         btnFullscreenPreview = view.findViewById(R.id.btnFullscreenPreview);
         btnCaptureShotPreview = view.findViewById(R.id.btnCaptureShotPreview);

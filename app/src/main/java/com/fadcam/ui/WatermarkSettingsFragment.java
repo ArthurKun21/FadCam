@@ -61,6 +61,7 @@ public class WatermarkSettingsFragment extends Fragment {
     private ActivityResultLauncher<String> permissionLauncher;
     private Runnable pendingGrantAction;
     private View locationRow;
+    private GpsProviderReceiver gpsProviderReceiver;
 
     @Nullable
     @Override
@@ -209,6 +210,12 @@ public class WatermarkSettingsFragment extends Fragment {
         });
 
         refreshExtendedRowValues();
+
+        // Register GPS provider change listener for real-time subtitle updates
+        gpsProviderReceiver = new GpsProviderReceiver();
+        android.content.IntentFilter gpsFilter = new android.content.IntentFilter(
+                android.location.LocationManager.PROVIDERS_CHANGED_ACTION);
+        requireContext().registerReceiver(gpsProviderReceiver, gpsFilter);
 
         permissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
             if (granted) {
@@ -953,6 +960,24 @@ public class WatermarkSettingsFragment extends Fragment {
                 super(itemView);
                 text = itemView.findViewById(R.id.text_watermark_preview);
             }
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (gpsProviderReceiver != null) {
+            try {
+                requireContext().unregisterReceiver(gpsProviderReceiver);
+            } catch (IllegalArgumentException ignored) {}
+            gpsProviderReceiver = null;
+        }
+    }
+
+    private class GpsProviderReceiver extends android.content.BroadcastReceiver {
+        @Override
+        public void onReceive(android.content.Context context, android.content.Intent intent) {
+            refreshExtendedRowValues();
         }
     }
 }
