@@ -336,13 +336,16 @@ public final class PhotoStorageHelper {
                 fadcamIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.menu_icon_unknown);
             } catch (Exception ignored) {}
 
-            int padding = Math.max(14, Math.round(minDim * 0.015f));
+            // Icon bigger than text like video watermark (icon is ~2x text height)
+            float iconHeight = textSize * 2.0f;
+
+            // Padding accounts for icon extending above text
+            int padding = Math.max(Math.round(iconHeight * 0.5f + 8),
+                    Math.round(minDim * 0.015f));
             String[] lines = text.split("\n");
             Paint.FontMetrics fm = paint.getFontMetrics();
             float lineHeight = (fm.descent - fm.ascent) + 4f;
 
-            // Icon bigger than text (matches video watermark where icon is ~1.6x text height)
-            float iconHeight = textSize * 1.6f;
             Bitmap scaledIcon = null;
             if (fadcamIcon != null) {
                 // Keep aspect ratio — don't stretch square
@@ -362,8 +365,9 @@ public final class PhotoStorageHelper {
                         canvas.drawText(parts[0], x, y, paint);
                         x += paint.measureText(parts[0]) + 6f;
                     }
-                    // Center icon vertically relative to text baseline
-                    float iconY = y - iconHeight + (iconHeight - textSize) * 0.5f + fm.descent * 0.3f;
+                    // Center icon vertically on the text line
+                    float iconCenterY = y + (fm.ascent + fm.descent) * 0.5f;
+                    float iconY = iconCenterY - iconHeight * 0.5f;
                     canvas.drawBitmap(scaledIcon, x, iconY, null);
                     x += scaledIcon.getWidth() + 6f;
                     if (parts.length > 1 && !parts[1].isEmpty()) {
