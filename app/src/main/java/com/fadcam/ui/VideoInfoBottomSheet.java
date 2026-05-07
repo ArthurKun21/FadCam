@@ -198,6 +198,17 @@ public class VideoInfoBottomSheet extends BottomSheetDialogFragment {
      * Adds an information row with icon to the container
      */
     private void addInfoRowWithIcon(LinearLayout container, String iconLigature, String label, String value) {
+        // Divider before each row (except first) — matches ScanInfoBottomSheet
+        if (container.getChildCount() > 0) {
+            View div = new View(getContext());
+            LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(1));
+            dlp.setMargins(dp(14), 0, dp(12), 0);
+            div.setLayoutParams(dlp);
+            div.setBackgroundColor(0xff404040);
+            container.addView(div);
+        }
+
         View rowView = LayoutInflater.from(getContext()).inflate(R.layout.video_info_row_item, container, false);
 
         TextView iconView = rowView.findViewById(R.id.info_icon);
@@ -689,8 +700,28 @@ public class VideoInfoBottomSheet extends BottomSheetDialogFragment {
     }
 
     private String getFormattedLastModified() {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                .format(new Date(lastModified));
+        Date d = new Date(lastModified);
+        String abs = new SimpleDateFormat("MMM dd, yyyy  hh:mm:ss a", Locale.getDefault()).format(d);
+        String rel = getRelativeTime(d);
+        return rel.isEmpty() ? abs : rel + "  (" + abs + ")";
+    }
+
+    private String getRelativeTime(Date date) {
+        long diff = System.currentTimeMillis() - date.getTime();
+        long sec = diff / 1000;
+        if (sec < 0) return "";
+        if (sec < 60) return "just now";
+        long min = sec / 60;
+        if (min < 60) return min + " min ago";
+        long hr = min / 60;
+        if (hr < 24) return hr + " hr ago";
+        long day = hr / 24;
+        if (day < 7) return day + " day" + (day > 1 ? "s" : "") + " ago";
+        long week = day / 7;
+        if (week < 5) return week + " week" + (week > 1 ? "s" : "") + " ago";
+        long month = day / 30;
+        if (month < 12) return month + " month" + (month > 1 ? "s" : "") + " ago";
+        return day / 365 + " year" + (day > 365 ? "s" : "") + " ago";
     }
 
     private String formatFileSize(long bytes) {
@@ -761,5 +792,9 @@ public class VideoInfoBottomSheet extends BottomSheetDialogFragment {
         String codec = "Unknown";
         String bitrate = "Unknown";
         String location = "No location data";
+    }
+
+    private int dp(float val) {
+        return (int) (val * getResources().getDisplayMetrics().density);
     }
 }

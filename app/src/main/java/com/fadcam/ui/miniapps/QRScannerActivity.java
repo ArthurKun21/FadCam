@@ -72,9 +72,15 @@ public class QRScannerActivity extends AppCompatActivity {
     private ImageView ivTorch;
     private boolean torchOn;
     private View scanLine;
+    private View resultContainer;
+    private TextView rt;
+    private TextView ht;
+    private View btnCopy;
+    private View btnAgain;
     private String lastScannedText;
     private String lastScannedFormat;
     private Date lastScannedTime;
+    private androidx.camera.core.Camera camera;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -84,15 +90,23 @@ public class QRScannerActivity extends AppCompatActivity {
         ImageView ivClose = findViewById(R.id.qr_close);
         ImageView ivInfo = findViewById(R.id.qr_info);
         scanLine = findViewById(R.id.qr_scan_line);
+        resultContainer = findViewById(R.id.qr_result_container);
+        rt = findViewById(R.id.qr_result_text);
+        ht = findViewById(R.id.qr_hint_text);
+        btnCopy = findViewById(R.id.qr_btn_copy);
+        btnAgain = findViewById(R.id.qr_btn_scan_again);
+
         if (ivClose != null) ivClose.setOnClickListener(v -> finish());
         if (ivTorch != null) ivTorch.setOnClickListener(v -> toggleTorch());
         if (ivInfo != null) ivInfo.setOnClickListener(v -> showInfoDialog());
+
         View headerBar = findViewById(R.id.qr_header_bar);
         if (headerBar != null) headerBar.setOnApplyWindowInsetsListener((v, ins) -> {
             v.setPadding(v.getPaddingLeft(), v.getPaddingTop() + ins.getSystemWindowInsetTop(),
                     v.getPaddingRight(), v.getPaddingBottom());
             return ins;
         });
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, RC_CAMERA);
         } else startCamera();
@@ -130,7 +144,7 @@ public class QRScannerActivity extends AppCompatActivity {
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build();
         analysis.setAnalyzer(cameraExecutor, this::analyzeFrame);
-        cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis);
+        camera = cameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis);
     }
 
     private void analyzeFrame(@NonNull ImageProxy image) {
@@ -174,7 +188,16 @@ public class QRScannerActivity extends AppCompatActivity {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             yuv.compressToJpeg(new Rect(0, 0, w, h), 90, out);
             byte[] jpeg = out.toByteArray();
-            return BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);
+            int rotation = image.getImageInfo().getRotationDegrees();
+            if (rotation != 0 && bitmap != null) {
+                android.graphics.Matrix matrix = new android.graphics.Matrix();
+                matrix.postRotate(rotation);
+                Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                if (rotated != bitmap) bitmap.recycle();
+                bitmap = rotated;
+            }
+            return bitmap;
         } catch (Exception e) {
             FLog.e("QRScanner", "yuvToBitmap failed", e);
             return null;
@@ -246,26 +269,40 @@ public class QRScannerActivity extends AppCompatActivity {
             mp.start();
             mp.setOnCompletionListener(android.media.MediaPlayer::release);
         } catch (Exception e) { FLog.w("QRScanner", "Beep failed", e); }
-        if (scanLine != null) { scanLine.clearAnimation(); scanLine.setVisibility(View.GONE); }
-        TextView rt = findViewById(R.id.qr_result_text);
-        TextView ht = findViewById(R.id.qr_hint_text);
-        View btnCopy = findViewById(R.id.qr_btn_copy);
-        View btnAgain = findViewById(R.id.qr_btn_scan_again);
-        if (rt != null) { rt.setText(text); rt.setVisibility(View.VISIBLE); }
-        if (ht != null) ht.setVisibility(View.GONE);
-        if (btnAgain != null) btnAgain.setVisibility(View.VISIBLE);
-        if (btnCopy != null) btnCopy.setOnClickListener(v -> {
-            ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            cm.setPrimaryClip(android.content.ClipData.newPlainText("Scanned", text));
-            Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show();
-        });
-        if (btnAgain != null) btnAgain.setOnClickListener(v -> {
-            if (rt != null) rt.setVisibility(View.GONE);
-            if (ht != null) ht.setVisibility(View.VISIBLE);
-            if (btnAgain != null) btnAgain.setVisibility(View.GONE);
-            isScanning.set(true);
-            startScanLineAnimation();
-        });
+        
+        if (scanLine != null) { 
+            scanLine.clearAnimation(); 
+            scanLine.setVisibility(View.GONE); 
+        }
+        
+        if (rt != null) { 
+            rt.setText(text); 
+        }
+        
+        if (resultContainer != null) {
+            resultContainer.setVisibility(View.VISIBLE);
+        }
+        
+        if (ht != null) {
+            ht.setVisibility(View.GONE);
+        }
+        
+        if (btnCopy != null) {
+            btnCopy.setOnClickListener(v -> {
+                ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("Scanned", text));
+                Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
+            });
+        }
+        
+        if (btnAgain != null) {
+            btnAgain.setOnClickListener(v -> {
+                if (resultContainer != null) resultContainer.setVisibility(View.GONE);
+                if (ht != null) ht.setVisibility(View.VISIBLE);
+                isScanning.set(true);
+                startScanLineAnimation();
+            });
+        }
     }
 
     private void saveScan(String text, String format, Bitmap frameBitmap) {
@@ -329,7 +366,12 @@ public class QRScannerActivity extends AppCompatActivity {
 
     private void toggleTorch() {
         torchOn = !torchOn;
-        if (ivTorch != null) ivTorch.setImageResource(torchOn ? R.drawable.ic_flashlight_on : R.drawable.ic_flashlight_off);
+        if (ivTorch != null) {
+            ivTorch.setImageResource(torchOn ? R.drawable.ic_flashlight_on : R.drawable.ic_flashlight_off);
+        }
+        if (camera != null) {
+            camera.getCameraControl().enableTorch(torchOn);
+        }
     }
 
     private void showInfoDialog() {

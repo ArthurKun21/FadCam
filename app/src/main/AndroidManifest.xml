@@ -351,7 +351,7 @@
         </activity>
         <activity
             android:name=".ui.miniapps.QRScannerActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
             android:exported="false"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="portrait" />

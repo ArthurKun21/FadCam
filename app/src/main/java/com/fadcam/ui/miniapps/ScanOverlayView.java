@@ -33,7 +33,15 @@ public class ScanOverlayView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        float scanSize = Math.min(w, h) * 0.6f;
+        
+        // Match the 260dp from layout
+        float density = getResources().getDisplayMetrics().density;
+        float scanSize = 260f * density;
+        
+        // Ensure it doesn't exceed screen size
+        float maxAllowed = Math.min(w, h) * 0.9f;
+        if (scanSize > maxAllowed) scanSize = maxAllowed;
+        
         float left = (w - scanSize) / 2f;
         float top = (h - scanSize) / 2f;
         scanRect.set(left, top, left + scanSize, top + scanSize);

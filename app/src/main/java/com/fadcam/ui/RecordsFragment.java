@@ -1170,11 +1170,10 @@ public class RecordsFragment extends BaseFragment implements
         return getString(R.string.records_delete_header_eta_seconds, seconds);
     }
 
-    // *** Register in onStart ***
+    // *** Register in onStart (except recordingCompleteReceiver — stays until onDestroyView) ***
     @Override
     public void onStart() {
         super.onStart();
-        registerRecordingCompleteReceiver();
         registerStorageLocationChangedReceiver();
         registerProcessingStateReceivers();
         registerSegmentCompleteReceiver();
@@ -1205,7 +1204,6 @@ public class RecordsFragment extends BaseFragment implements
         if (invalidationCoordinator != null) {
             invalidationCoordinator.stop();
         }
-        unregisterRecordingCompleteReceiver();
         unregisterStorageLocationChangedReceiver();
         unregisterProcessingStateReceivers();
         unregisterSegmentCompleteReceiver();
@@ -1947,6 +1945,7 @@ public class RecordsFragment extends BaseFragment implements
             fabDeleteSelected.setTextColor(android.graphics.Color.WHITE);
         }
         // RecordsFragment -----
+        registerRecordingCompleteReceiver();
     } // End onViewCreated
 
     @Override
@@ -2081,13 +2080,10 @@ public class RecordsFragment extends BaseFragment implements
             }
             syncDeletionUiFromStore(true);
             
-            // Check if data needs refreshing
-            boolean hasData = recordsAdapter != null && recordsAdapter.getItemCount() > 0 && !videoItems.isEmpty();
-            boolean hasDbIndex = com.fadcam.data.VideoIndexRepository.getInstance(requireContext()).getIndexedCount() > 0;
-            
-            if (hasData && hasDbIndex && !isLoading) {
-                FLog.d(TAG, "onHiddenChanged: Data valid, updating UI visibility only");
-                updateUiVisibility();
+            // Always delta-scan on reappear to pick up new files (QR scans, shots, etc.)
+            if (!isLoading && recordsAdapter != null && recordsAdapter.getItemCount() > 0) {
+                FLog.d(TAG, "onHiddenChanged: running delta scan for new items");
+                loadRecordsList();
             } else if (!isLoading) {
                 FLog.i(TAG, "onHiddenChanged: Need to refresh data");
                 loadRecordsList();
@@ -5218,6 +5214,7 @@ public class RecordsFragment extends BaseFragment implements
     @Override
     public void onDestroy() {
         super.onDestroy();
+        unregisterRecordingCompleteReceiver();
         if (fastScroller != null) {
             fastScroller.detach();
         }
