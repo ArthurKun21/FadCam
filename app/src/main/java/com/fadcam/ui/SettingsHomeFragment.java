@@ -19,6 +19,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.fadcam.R;
+import com.fadcam.FLog;
+import com.fadcam.FLog;
 
 /**
  * SettingsHomeFragment
@@ -361,15 +363,73 @@ public class SettingsHomeFragment extends Fragment {
         bindRow(root, R.id.group_digital_forensics, () -> openSubFragment(new DigitalForensicsSettingsFragment()));
         bindRow(root, R.id.group_widgets, () -> openSubFragment(new ShortcutsSettingsFragment()));
         bindRow(root, R.id.group_notifications, () -> openSubFragment(new NotificationSettingsFragment()));
+        setupMiniAppCards(root);
         bindRow(root, R.id.group_watermark_quick, () -> openSubFragment(new WatermarkSettingsFragment()));
         bindRow(root, R.id.group_about, () -> openSubFragment(new AboutFragment()));
         bindRow(root, R.id.group_review, () -> launchReview());
         bindRow(root, R.id.group_readme, () -> openReadmeDialog());
     }
 
+    private void setupMiniAppCards(View root) {
+        setupMiniCard(root, R.id.group_mini_torch, R.string.mini_app_torch_title,
+                R.string.mini_app_torch_desc, "flashlight_on", 0, () -> {
+            try {
+                com.fadcam.ui.miniapps.TorchToolFragment torchTool = com.fadcam.ui.miniapps.TorchToolFragment.newInstance();
+                OverlayNavUtil.show(requireActivity(), torchTool, "torch_tool");
+            } catch (Exception e) {
+                FLog.w("SettingsHome", "Failed to open torch", e);
+            }
+        });
+        setupMiniCard(root, R.id.group_mini_compass, R.string.mini_app_compass_title,
+                R.string.mini_app_compass_desc, "explore", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "compass"));
+        setupMiniCard(root, R.id.group_mini_sound_meter, R.string.mini_app_sound_meter_title,
+                R.string.mini_app_sound_meter_desc, "graphic_eq", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "sound_meter"));
+        setupMiniCard(root, R.id.group_mini_sensor, R.string.mini_app_sensor_dashboard_title,
+                R.string.mini_app_sensor_dashboard_desc, "sensors", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "sensor_dashboard"));
+        setupMiniCard(root, R.id.group_mini_speedometer, R.string.mini_app_speedometer_title,
+                R.string.mini_app_speedometer_desc, "speed", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "speedometer"));
+        setupMiniCard(root, R.id.group_mini_clinometer, R.string.mini_app_clinometer_title,
+                R.string.mini_app_clinometer_desc, "architecture", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "clinometer"));
+        setupMiniCard(root, R.id.group_mini_qr_scanner, R.string.mini_app_qr_scanner_title,
+                R.string.mini_app_qr_scanner_desc, "qr_code_scanner", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "qr_scanner"));
+        setupMiniCard(root, R.id.group_mini_pedometer, R.string.mini_app_pedometer_title,
+                R.string.mini_app_pedometer_desc, "directions_walk", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "pedometer"));
+        setupMiniCard(root, R.id.group_mini_metal_detector, R.string.mini_app_metal_detector_title,
+                R.string.mini_app_metal_detector_desc, "travel_explore", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "metal_detector"));
+    }
+
     private void bindRow(View root, int id, Runnable action) {
         View v = root.findViewById(id);
         if (v != null) v.setOnClickListener(x -> action.run());
+    }
+
+    private void setupMiniCard(View root, int cardId, int titleRes, int descRes, String icon, int badgeRes, Runnable action) {
+        View card = root.findViewById(cardId);
+        if (card == null) return;
+        TextView iconTv = card.findViewById(R.id.mini_card_icon);
+        if (iconTv != null) iconTv.setText(icon);
+        TextView titleTv = card.findViewById(R.id.mini_card_title);
+        if (titleTv != null) titleTv.setText(titleRes);
+        TextView descTv = card.findViewById(R.id.mini_card_desc);
+        if (descTv != null) descTv.setText(descRes);
+        TextView badgeTv = card.findViewById(R.id.mini_card_badge);
+        if (badgeTv != null) {
+            if (badgeRes != 0) {
+                badgeTv.setText(badgeRes);
+                badgeTv.setVisibility(View.VISIBLE);
+            } else {
+                badgeTv.setVisibility(View.GONE);
+            }
+        }
+        card.setOnClickListener(v -> action.run());
     }
 
     private void openSubFragment(Fragment fragment) {

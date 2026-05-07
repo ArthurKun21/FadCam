@@ -716,6 +716,64 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Mini Apps Section Header -->
+        <TextView
+            android:id="@+id/header_mini_apps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/mini_apps_title"
+            android:textColor="?attr/sectionHeaderColor"
+            android:textStyle="bold" />
+
+        <!-- Mini Apps Grid (3 columns) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="0dp">
+
+            <include android:id="@+id/group_mini_torch" layout="@layout/item_mini_app_card" />
+            <include android:id="@+id/group_mini_compass" layout="@layout/item_mini_app_card" />
+            <include android:id="@+id/group_mini_sound_meter" layout="@layout/item_mini_app_card" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp">
+
+            <include android:id="@+id/group_mini_sensor" layout="@layout/item_mini_app_card" />
+            <include android:id="@+id/group_mini_speedometer" layout="@layout/item_mini_app_card" />
+            <include android:id="@+id/group_mini_clinometer" layout="@layout/item_mini_app_card" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp">
+
+            <include android:id="@+id/group_mini_qr_scanner" layout="@layout/item_mini_app_card" />
+            <include android:id="@+id/group_mini_pedometer" layout="@layout/item_mini_app_card" />
+            <include android:id="@+id/group_mini_metal_detector" layout="@layout/item_mini_app_card" />
+        </LinearLayout>
+
         <!-- About Section Header -->
         <TextView
             android:id="@+id/header_about"
@@ -885,6 +943,43 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/prefs_import_export_subtitle"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp"/>
+                </LinearLayout>
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_arrow_right"
+                    android:tint="@android:color/darker_gray"/>
+            </LinearLayout>
+            <View style="@style/SettingsDivider" />
+
+            <LinearLayout
+                android:id="@+id/group_mini_apps"
+                style="@style/SettingsGroupRow"
+                >
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    android:src="@drawable/ic_settings"
+                    android:tint="@android:color/darker_gray"/>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_apps_title"
+                        android:textColor="?attr/colorHeading"
+                        android:textStyle="bold"
+                        android:textSize="15sp"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_apps_subtitle"
                         android:textColor="@android:color/darker_gray"
                         android:textSize="12sp"/>
                 </LinearLayout>

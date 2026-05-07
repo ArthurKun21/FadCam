@@ -14,6 +14,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import com.fadcam.ui.AvatarToggleView;
 import androidx.fragment.app.DialogFragment;
 import com.fadcam.R;
@@ -261,7 +262,7 @@ public class HomeSidebarFragment extends DialogFragment {
         View compassRow = view.findViewById(R.id.row_mini_app_compass);
         if (compassRow != null) {
             compassRow.setOnClickListener(v -> {
-                showMiniAppComingSoon("compass");
+                showMiniAppComingSoon(this, "compass");
             });
         }
 
@@ -269,7 +270,7 @@ public class HomeSidebarFragment extends DialogFragment {
         View soundMeterRow = view.findViewById(R.id.row_mini_app_sound_meter);
         if (soundMeterRow != null) {
             soundMeterRow.setOnClickListener(v -> {
-                showMiniAppComingSoon("sound_meter");
+                showMiniAppComingSoon(this, "sound_meter");
             });
         }
 
@@ -277,28 +278,63 @@ public class HomeSidebarFragment extends DialogFragment {
         View sensorDashboardRow = view.findViewById(R.id.row_mini_app_sensor_dashboard);
         if (sensorDashboardRow != null) {
             sensorDashboardRow.setOnClickListener(v -> {
-                showMiniAppComingSoon("sensor_dashboard");
+                showMiniAppComingSoon(this, "sensor_dashboard");
             });
         }
+        // Speedometer Mini App - Coming Soon
+        View speedometerRow = view.findViewById(R.id.row_mini_app_speedometer);
+        if (speedometerRow != null) speedometerRow.setOnClickListener(v -> showMiniAppComingSoon(this, "speedometer"));
+        // Clinometer Mini App - Coming Soon
+        View clinometerRow = view.findViewById(R.id.row_mini_app_clinometer);
+        if (clinometerRow != null) clinometerRow.setOnClickListener(v -> showMiniAppComingSoon(this, "clinometer"));
+        // QR Scanner Mini App - Coming Soon
+        View qrScannerRow = view.findViewById(R.id.row_mini_app_qr_scanner);
+        if (qrScannerRow != null) qrScannerRow.setOnClickListener(v -> showMiniAppComingSoon(this, "qr_scanner"));
+        // Pedometer Mini App - Coming Soon
+        View pedometerRow = view.findViewById(R.id.row_mini_app_pedometer);
+        if (pedometerRow != null) pedometerRow.setOnClickListener(v -> showMiniAppComingSoon(this, "pedometer"));
+        // Metal Detector Mini App - Coming Soon
+        View metalDetectorRow = view.findViewById(R.id.row_mini_app_metal_detector);
+        if (metalDetectorRow != null) metalDetectorRow.setOnClickListener(v -> showMiniAppComingSoon(this, "metal_detector"));
     }
 
-    private void showMiniAppComingSoon(String appId) {
+    public static void showMiniAppComingSoon(Fragment fragment, String appId) {
         try {
             String title = null;
             String desc = null;
             
             switch (appId) {
                 case "compass":
-                    title = getString(R.string.mini_app_compass_title);
-                    desc = getString(R.string.mini_app_compass_desc);
+                    title = fragment.getString(R.string.mini_app_compass_title);
+                    desc = fragment.getString(R.string.mini_app_compass_desc);
                     break;
                 case "sound_meter":
-                    title = getString(R.string.mini_app_sound_meter_title);
-                    desc = getString(R.string.mini_app_sound_meter_desc);
+                    title = fragment.getString(R.string.mini_app_sound_meter_title);
+                    desc = fragment.getString(R.string.mini_app_sound_meter_desc);
                     break;
                 case "sensor_dashboard":
-                    title = getString(R.string.mini_app_sensor_dashboard_title);
-                    desc = getString(R.string.mini_app_sensor_dashboard_desc);
+                    title = fragment.getString(R.string.mini_app_sensor_dashboard_title);
+                    desc = fragment.getString(R.string.mini_app_sensor_dashboard_desc);
+                    break;
+                case "speedometer":
+                    title = fragment.getString(R.string.mini_app_speedometer_title);
+                    desc = fragment.getString(R.string.mini_app_speedometer_desc);
+                    break;
+                case "clinometer":
+                    title = fragment.getString(R.string.mini_app_clinometer_title);
+                    desc = fragment.getString(R.string.mini_app_clinometer_desc);
+                    break;
+                case "qr_scanner":
+                    title = fragment.getString(R.string.mini_app_qr_scanner_title);
+                    desc = fragment.getString(R.string.mini_app_qr_scanner_desc);
+                    break;
+                case "pedometer":
+                    title = fragment.getString(R.string.mini_app_pedometer_title);
+                    desc = fragment.getString(R.string.mini_app_pedometer_desc);
+                    break;
+                case "metal_detector":
+                    title = fragment.getString(R.string.mini_app_metal_detector_title);
+                    desc = fragment.getString(R.string.mini_app_metal_detector_desc);
                     break;
             }
             
@@ -312,10 +348,10 @@ public class HomeSidebarFragment extends DialogFragment {
                 items,
                 appId,
                 "mini_app_" + appId,
-                getString(R.string.mini_app_coming_soon_desc),
-                true // hide check since it's just info
+                fragment.getString(R.string.mini_app_coming_soon_desc),
+                true
             );
-            picker.show(getParentFragmentManager(), "mini_app_coming_soon_" + appId);
+            picker.show(fragment.getParentFragmentManager(), "mini_app_coming_soon_" + appId);
         } catch (Exception e) {
             FLog.w("HomeSidebar", "Failed to show mini app coming soon", e);
         }

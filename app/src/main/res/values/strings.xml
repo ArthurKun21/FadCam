@@ -2397,4 +2397,14 @@ For the smoothest playback experience, you can use an external player like VLC. 
     <string name="watermark_utm_off">Off</string>
     <string name="watermark_utm_on">On — Universal Transverse Mercator grid coordinates</string>
     <string name="watermark_utm_helper">UTM divides Earth into 60 zones and converts lat/lon to easting &amp; northing in meters. Used by military, surveyors, and topographic maps for precise grid positioning.\n\nHow to read: &quot;Zone 42N — 372,684m E, 3,512,334m N&quot; = Zone 42 in Northern hemisphere, 372,684 meters Easting (east-west), 3,512,334 meters Northing (north-south).</string>
+    <string name="mini_app_speedometer_title">Speedometer</string>
+    <string name="mini_app_speedometer_desc">Real-time car speedometer with GPS speed tracking</string>
+    <string name="mini_app_clinometer_title">Clinometer</string>
+    <string name="mini_app_clinometer_desc">Measure angles and slopes using gyroscope</string>
+    <string name="mini_app_qr_scanner_title">QR Scanner</string>
+    <string name="mini_app_qr_scanner_desc">Scan QR codes and barcodes instantly</string>
+    <string name="mini_app_pedometer_title">Pedometer</string>
+    <string name="mini_app_pedometer_desc">Step counter using built-in step sensor</string>
+    <string name="mini_app_metal_detector_title">Metal Detector</string>
+    <string name="mini_app_metal_detector_desc">Detect metal objects using magnetometer</string>
 </resources>
