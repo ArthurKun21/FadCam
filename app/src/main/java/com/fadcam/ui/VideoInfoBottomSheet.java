@@ -191,7 +191,28 @@ public class VideoInfoBottomSheet extends BottomSheetDialogFragment {
         addInfoRowWithIcon(container, "speed", getString(R.string.video_info_fps), metadata.frameRate);
         addInfoRowWithIcon(container, "video_settings", getString(R.string.video_info_codec), metadata.codec);
         addInfoRowWithIcon(container, "data_usage", getString(R.string.video_info_bitrate), metadata.bitrate);
-        addInfoRowWithIcon(container, "location_on", getString(R.string.video_info_geotag), metadata.location);
+        
+        // Location: add raw coordinates first, then async geocode
+        String locationText = metadata.location;
+        addInfoRowWithIcon(container, "location_on", getString(R.string.video_info_geotag), locationText);
+        
+        // Launch async reverse geocoding if we have raw coordinates
+        if (locationText != null && locationText.contains(",")) {
+            try {
+                String[] parts = locationText.split(",");
+                double lat = Double.parseDouble(parts[0].trim());
+                double lon = Double.parseDouble(parts[1].trim());
+                View lastRow = container.getChildAt(container.getChildCount() - 1);
+                // Skip the divider (if any) and get the actual row
+                View rowView = lastRow instanceof LinearLayout ? lastRow : container.getChildAt(container.getChildCount() - 2);
+                if (rowView != null) {
+                    TextView valueView = rowView.findViewById(R.id.info_value);
+                    if (valueView != null) {
+                        asyncGeocode(lat, lon, valueView, locationText);
+                    }
+                }
+            } catch (Exception e) { FLog.d(TAG, "Geocode parse error", e); }
+        }
     }
 
     /**
@@ -511,34 +532,40 @@ public class VideoInfoBottomSheet extends BottomSheetDialogFragment {
     }
 
     /**
-     * Formats location coordinates with optional reverse geocoding
+     * Formats location as raw coordinates (fast, no I/O).
+     * Reverse geocoding runs async on a background thread.
      */
     private String formatLocationCoordinates(double latitude, double longitude) {
-        String coordinates = String.format(Locale.US, "%.6f, %.6f", latitude, longitude);
+        return String.format(Locale.US, "%.6f, %.6f", latitude, longitude);
+    }
 
-        // Try to get address from coordinates
-        try {
-            if (getContext() != null) {
-                Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
-                List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
-
-                if (addresses != null && !addresses.isEmpty()) {
-                    Address address = addresses.get(0);
-                    String locality = address.getLocality();
-                    String country = address.getCountryName();
-
-                    if (locality != null && country != null) {
-                        return coordinates + "\n" + locality + ", " + country;
-                    } else if (country != null) {
-                        return coordinates + "\n" + country;
+    /**
+     * Runs reverse geocoding on a background thread and updates the value view.
+     */
+    private void asyncGeocode(double lat, double lon, @NonNull TextView valueView, @NonNull String rawCoords) {
+        new Thread(() -> {
+            String result = rawCoords;
+            try {
+                if (getContext() != null) {
+                    Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
+                    List<Address> addresses = geocoder.getFromLocation(lat, lon, 1);
+                    if (addresses != null && !addresses.isEmpty()) {
+                        Address address = addresses.get(0);
+                        String locality = address.getLocality();
+                        String country = address.getCountryName();
+                        if (locality != null && country != null) {
+                            result = rawCoords + "\n" + locality + ", " + country;
+                        } else if (country != null) {
+                            result = rawCoords + "\n" + country;
+                        }
                     }
                 }
+            } catch (Exception e) { FLog.d(TAG, "Geocode failed", e); }
+            final String finalResult = result;
+            if (valueView.getHandler() != null) {
+                valueView.post(() -> valueView.setText(finalResult));
             }
-        } catch (Exception e) {
-            FLog.d(TAG, "Could not reverse geocode coordinates", e);
-        }
-
-        return coordinates;
+        }, "GeocoderThread").start();
     }
 
     /**
