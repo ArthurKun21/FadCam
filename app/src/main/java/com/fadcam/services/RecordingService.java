@@ -1045,6 +1045,14 @@ public class RecordingService extends Service {
                 FLog.d(TAG, "Ignoring preview-only start: recording already active");
                 return START_STICKY;
             }
+            if (previewOnlyActive) {
+                FLog.d(TAG, "Preview already active — handling surface change only (fullscreen transition)");
+                setupSurfaceTexture(intent);
+                if (previewSurface != null && previewSurface.isValid()) {
+                    ensurePreviewOnlyGlPipeline();
+                }
+                return START_STICKY;
+            }
             setupSurfaceTexture(intent);
             if (previewSurface == null || !previewSurface.isValid()) {
                 pendingPreviewOnlyStart = true;
@@ -4364,8 +4372,12 @@ public class RecordingService extends Service {
                     } else {
                         glRecordingPipeline.setPreviewSurface(previewSurface);
                     }
-                } else if (hasSurfaceExtra) {
+                } else if (hasSurfaceExtra && !isFullscreenTransition) {
+                    // Never set null during fullscreen transition — keep old surface alive
+                    // until the fullscreen surface arrives (avoids GL pipeline losing render target)
                     glRecordingPipeline.setPreviewSurface(null);
+                } else if (hasSurfaceExtra && isFullscreenTransition) {
+                    FLog.d(TAG, "Skipping null surface — fullscreen transition in progress, keeping old surface");
                 }
             }
             // Only create dummy surface if truly backgrounding, not transitioning to fullscreen

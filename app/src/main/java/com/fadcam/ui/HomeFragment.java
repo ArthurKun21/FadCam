@@ -3615,7 +3615,7 @@ public class HomeFragment extends BaseFragment {
         super.onPause();
         FLog.d(TAG, "HomeFragment paused.");
         updateMainSwipeGestureGate(false);
-        if (!isRecordingOrPaused() && (isPreviewOnlyActive || isPreviewOnlyStartPending)) {
+        if (!isRecordingOrPaused() && (isPreviewOnlyActive || isPreviewOnlyStartPending) && !isLaunchingFullscreen) {
             dispatchStopPreviewOnly();
             clearPreviewOnlyPendingState(true);
             isPreviewOnlyActive = false;
@@ -5012,7 +5012,7 @@ public class HomeFragment extends BaseFragment {
                     if (isReturningFromFullscreen) {
                         isReturningFromFullscreen = false;
                     }
-                    if (isPreviewEnabled && (isRecordingOrPaused() || isPreviewOnlyActive || isPreviewOnlyStartPending)) {
+                    if (isPreviewEnabled && (isRecordingOrPaused() || isPreviewOnlyActive || isPreviewOnlyStartPending) && !isLaunchingFullscreen) {
                         updateServiceWithCurrentSurface(
                             textureViewSurface,
                             width,
@@ -5044,7 +5044,8 @@ public class HomeFragment extends BaseFragment {
                         isPreviewEnabled &&
                         (isRecordingOrPaused() || isPreviewOnlyActive || isPreviewOnlyStartPending) &&
                         textureViewSurface != null &&
-                        textureViewSurface.isValid()
+                        textureViewSurface.isValid() &&
+                        !isLaunchingFullscreen
                     ) {
                         FLog.d(
                             TAG,
@@ -5071,12 +5072,17 @@ public class HomeFragment extends BaseFragment {
                         // Only send null if we're not returning from fullscreen.
                         // During fullscreen return, texture is destroyed/recreated rapidly, and
                         // sending null causes "Surface lost" dummy surface creation.
-                        if ((isRecordingOrPaused() || isPreviewOnlyActive) && !isReturningFromFullscreen) {
+                        if ((isRecordingOrPaused() || isPreviewOnlyActive) && !isReturningFromFullscreen && !isLaunchingFullscreen) {
                             FLog.d(
                                 TAG,
                                 "onSurfaceTextureDestroyed: Recording active, sending null surface to service."
                             );
                             updateServiceWithCurrentSurface(null);
+                        } else if (isLaunchingFullscreen) {
+                            FLog.d(
+                                TAG,
+                                "onSurfaceTextureDestroyed: Skipping null surface — launching fullscreen"
+                            );
                         } else if (isReturningFromFullscreen) {
                             FLog.d(
                                 TAG,
@@ -10493,6 +10499,13 @@ public class HomeFragment extends BaseFragment {
             return;
         }
 
+        // During fullscreen launch, NEVER send HomeFragment surfaces to the service.
+        // The fullscreen activity owns the preview surface during this time.
+        if (isLaunchingFullscreen && !isFullscreenTransition) {
+            FLog.d(TAG, "updateServiceWithCurrentSurface: Blocked — fullscreen is launching");
+            return;
+        }
+
         // Avoid waking RecordingService with ACTION_CHANGE_SURFACE when nothing is active.
         // This prevents service churn (create/destroy loops) while idle.
         boolean shouldSyncSingleService =
@@ -10924,7 +10937,7 @@ public class HomeFragment extends BaseFragment {
             if (!isLaunchingPhotoCapture) {
                 stopBubbleRotation();
             }
-            if (!isRecordingOrPaused() && (isPreviewOnlyActive || isPreviewOnlyStartPending)) {
+        if (!isRecordingOrPaused() && (isPreviewOnlyActive || isPreviewOnlyStartPending) && !isLaunchingFullscreen) {
                 dispatchStopPreviewOnly();
                 clearPreviewOnlyPendingState(true);
                 isPreviewOnlyActive = false;
