@@ -4554,6 +4554,17 @@ public class RecordingService extends Service {
                 }
             }
             
+            // Append UTM coordinates if enabled and location is available
+            if (sharedPreferencesManager.isUtmEnabled() && locationHelper != null) {
+                org.osmdroid.util.GeoPoint utmPt = locationHelper.getCurrentLocation();
+                if (utmPt != null) {
+                    String utm = com.fadcam.utils.UTMConverter.latLonToUTM(utmPt.getLatitude(), utmPt.getLongitude());
+                    if (utm != null && !utm.isEmpty()) {
+                        cachedLocationWatermarkText += "\n" + utm;
+                    }
+                }
+            }
+            
             lastLocationWatermarkUpdateMs = currentTimeMs;
             FLog.d(TAG, "📍 Location watermark cache updated");
         } else {

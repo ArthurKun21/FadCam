@@ -2393,4 +2393,8 @@ For the smoothest playback experience, you can use an external player like VLC. 
     <string name="torch_timer_custom_error_positive">Duration must be greater than 0</string>
     <string name="torch_timer_custom_error_invalid">Invalid number</string>
 
+    <string name="watermark_utm_title">UTM Coordinates</string>
+    <string name="watermark_utm_off">Off</string>
+    <string name="watermark_utm_on">On — Universal Transverse Mercator grid coordinates</string>
+    <string name="watermark_utm_helper">UTM divides Earth into 60 zones and converts lat/lon to easting &amp; northing in meters. Used by military, surveyors, and topographic maps for precise grid positioning.\n\nHow to read: &quot;Zone 42N — 372,684m E, 3,512,334m N&quot; = Zone 42 in Northern hemisphere, 372,684 meters Easting (east-west), 3,512,334 meters Northing (north-south).</string>
 </resources>

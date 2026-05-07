@@ -241,6 +241,14 @@ public class PhotoCaptureActivity extends ComponentActivity {
                   .append(", Long: ").append(String.format(java.util.Locale.US, "%.4f", pt.getLongitude()));
             }
             lh.stopLocationUpdates();
+            // Append UTM if enabled and location available
+            if (prefs.isUtmEnabled() && pt != null) {
+                String utm = com.fadcam.utils.UTMConverter.latLonToUTM(pt.getLatitude(), pt.getLongitude());
+                if (utm != null && !utm.isEmpty()) {
+                    if (sb.length() > 0) sb.append("\n");
+                    sb.append(utm);
+                }
+            }
             gatherSensorsAndFinish(prefs, sb, latch, pt);
         } else if (System.currentTimeMillis() < deadline) {
             h.postDelayed(() -> pollLocation(lh, deadline, prefs, sb, latch), 500);
