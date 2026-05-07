@@ -2332,6 +2332,7 @@ For the smoothest playback experience, you can use an external player like VLC. 
     <string name="torch_pattern_sos">SOS</string>
     <string name="torch_pattern_morse">Morse Code</string>
     <string name="torch_status_on">ON</string>
+    <string name="torch_status_off">Off</string>
     <string name="torch_tap_to_enable">Tap to turn on</string>
     <string name="torch_screen_light_label">Screen Light</string>
     <string name="torch_screen_light_desc">Fullscreen white overlay</string>
@@ -2366,5 +2367,30 @@ For the smoothest playback experience, you can use an external player like VLC. 
     <string name="pattern_strobe_desc">Rapid on-off flashing pattern for emergency signaling</string>
     <string name="pattern_sos_desc">SOS Morse code pattern: 3 short + 3 long + 3 short flashes</string>
     <string name="pattern_morse_desc">Morse code pattern for advanced signaling</string>
+
+    <!-- Torch Auto-off Timer -->
+    <string name="torch_timer_label">Auto-off Timer</string>
+    <string name="torch_timer_desc">Torch turns off automatically after the set time</string>
+    <string name="torch_timer_off">Off</string>
+    <string name="torch_timer_picker_helper">Timer only starts when the torch is on</string>
+    <string name="torch_timer_cancel">Cancel Timer</string>
+    <string name="torch_timer_30s">30 seconds</string>
+    <string name="torch_timer_1m">1 minute</string>
+    <string name="torch_timer_2m">2 minutes</string>
+    <string name="torch_timer_5m">5 minutes</string>
+    <string name="torch_timer_10m">10 minutes</string>
+    <string name="torch_timer_15m">15 minutes</string>
+    <string name="torch_timer_30m">30 minutes</string>
+    <string name="torch_timer_1h">1 hour</string>
+
+    <!-- Torch Custom Timer -->
+    <string name="torch_timer_custom_title">Set Custom Timer</string>
+    <string name="torch_timer_custom_unit_helper">Choose the time unit</string>
+    <string name="torch_timer_custom_hint">Enter duration</string>
+    <string name="torch_timer_custom_minutes_example">e.g., 5 for 5 minutes</string>
+    <string name="torch_timer_custom_hours_example">e.g., 2 for 2 hours</string>
+    <string name="torch_timer_custom_apply">Apply</string>
+    <string name="torch_timer_custom_error_positive">Duration must be greater than 0</string>
+    <string name="torch_timer_custom_error_invalid">Invalid number</string>
 
 </resources>

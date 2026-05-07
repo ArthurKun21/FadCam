@@ -236,6 +236,12 @@ public class HomeSidebarFragment extends DialogFragment {
         setupMiniAppRows(view);
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // AvatarToggleView handles its own animation cleanup via onDetachedFromWindow().
+    }
+
     private void setupMiniAppRows(View view) {
         // Torch Mini App - open full screen tool
         View torchRow = view.findViewById(R.id.row_mini_app_torch);
@@ -350,12 +356,6 @@ public class HomeSidebarFragment extends DialogFragment {
                 guard++;
             }
         }
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        // AvatarToggleView handles its own animation cleanup via onDetachedFromWindow().
     }
 
     private void openWhatsNew() {

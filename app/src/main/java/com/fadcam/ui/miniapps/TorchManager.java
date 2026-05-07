@@ -12,8 +12,10 @@ import com.fadcam.FLog;
 import com.fadcam.Constants;
 
 /**
- * TorchManager
- * Simplified torch manager that reuses existing TorchService and torch control logic.
+ * TorchManager - Singleton pattern for app-wide torch state management
+ * Industry standard approach: single shared instance ensures all parts of the app
+ * (UI, notification receiver, etc.) access the same state without duplication.
+ * 
  * Handles LED torch control, screen brightness management, and flash patterns.
  */
 public class TorchManager {
@@ -52,7 +54,29 @@ public class TorchManager {
     private TorchStateListener listener;
     private static final String PREF_TORCH_PATTERN = "torch_tool_pattern";
 
-    public TorchManager(Context context) {
+    // Singleton instance - shared across app
+    private static volatile TorchManager instance;
+    private static final Object LOCK = new Object();
+
+    /**
+     * Get singleton instance. Thread-safe using double-checked locking.
+     * Industry standard pattern for app-wide state management.
+     */
+    public static TorchManager getInstance(Context context) {
+        if (instance == null) {
+            synchronized (LOCK) {
+                if (instance == null) {
+                    instance = new TorchManager(context);
+                }
+            }
+        }
+        return instance;
+    }
+
+    /**
+     * Private constructor - use getInstance() instead
+     */
+    private TorchManager(Context context) {
         this.context = context.getApplicationContext();
         this.cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
         this.mainHandler = new Handler(Looper.getMainLooper());
@@ -181,14 +205,17 @@ public class TorchManager {
             .putInt(PREF_TORCH_PATTERN, pattern.value)
             .apply();
 
-        // Stop any existing pattern handler
+        // Capture user intent BEFORE stopping (PatternHandler.stop() no longer changes isTorchOn)
+        boolean wasOn = isTorchOn;
+
+        // Stop any existing pattern handler (safe: stop() only cancels callbacks)
         if (patternHandler != null) {
             patternHandler.stop();
             patternHandler = null;
         }
 
-        // Only apply if torch is currently on
-        if (isTorchOn) {
+        // Apply new pattern only if torch was on before the switch
+        if (wasOn) {
             if (pattern == FlashPattern.STEADY) {
                 // Restore steady (ensure torch is on)
                 try {
@@ -251,14 +278,7 @@ public class TorchManager {
         void stop() {
             isRunning = false;
             handler.removeCallbacksAndMessages(null);
-            try {
-                if (torchCameraId != null) {
-                    cameraManager.setTorchMode(torchCameraId, false);
-                    isTorchOn = false;
-                }
-            } catch (CameraAccessException e) {
-                FLog.e("TorchManager", "Failed to stop pattern", e);
-            }
+            // Hardware state is managed by TorchManager, not PatternHandler
         }
 
         private void executePattern() {
@@ -301,7 +321,6 @@ public class TorchManager {
                 try {
                     if (torchCameraId != null) {
                         cameraManager.setTorchMode(torchCameraId, false);
-                        isTorchOn = false;
                     }
                 } catch (CameraAccessException e) {
                     FLog.e("TorchManager", "Flash off failed", e);
@@ -312,7 +331,6 @@ public class TorchManager {
                     try {
                         if (torchCameraId != null) {
                             cameraManager.setTorchMode(torchCameraId, true);
-                            isTorchOn = true;
                         }
                     } catch (CameraAccessException e) {
                         FLog.e("TorchManager", "Flash on failed", e);
@@ -337,7 +355,6 @@ public class TorchManager {
                     try {
                         if (torchCameraId != null) {
                             cameraManager.setTorchMode(torchCameraId, finalShouldBeOn);
-                            isTorchOn = finalShouldBeOn;
                         }
                     } catch (CameraAccessException e) {
                         FLog.e("TorchManager", "Flash sequence failed", e);

@@ -419,6 +419,13 @@
             </intent-filter>
         </receiver>
 
+        <!-- Torch Notification Receiver for handling notification actions -->
+        <receiver android:name=".ui.miniapps.TorchNotificationReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="com.fadcam.TORCH_OFF"/>
+            </intent-filter>
+        </receiver>
+
         <!-- Clock App Widget Provider -->
         <receiver android:name=".widgets.ClockWidgetProvider" android:exported="true" android:label="@string/widget_clock_title">
             <intent-filter>
