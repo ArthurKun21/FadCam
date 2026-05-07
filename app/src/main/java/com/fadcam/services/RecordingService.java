@@ -1538,11 +1538,14 @@ public class RecordingService extends Service {
                         bitmapForSave = cropped;
                     }
                 }
+                // Build extra watermark data from live sensors/location
+                String extraWatermark = buildPhotoWatermarkExtras();
                 Uri savedUri = PhotoStorageHelper.saveJpegBitmap(
                         getApplicationContext(),
                         bitmapForSave,
                         true,
-                        shotSource);
+                        shotSource,
+                        extraWatermark);
                 bitmapForSave.recycle();
                 if (savedUri != null) {
                     Intent updateIntent = new Intent(Constants.ACTION_RECORDING_COMPLETE);
@@ -4558,6 +4561,27 @@ public class RecordingService extends Service {
         }
         
         return cachedLocationWatermarkText;
+    }
+
+    private String buildPhotoWatermarkExtras() {
+        StringBuilder sb = new StringBuilder();
+
+        // Location data (same format as video watermark)
+        if (sharedPreferencesManager != null && sharedPreferencesManager.isLocalisationEnabled()) {
+            String loc = getLocationData();
+            if (loc != null && !loc.isEmpty()) {
+                sb.append(loc.trim());
+            }
+        }
+
+        // Extended sensor data (same format as video watermark)
+        String sensors = getExtendedSensorData();
+        if (sensors != null && !sensors.isEmpty()) {
+            if (sb.length() > 0) sb.append("\n");
+            sb.append(sensors.trim());
+        }
+
+        return sb.toString();
     }
 
     private String getExtendedSensorData() {
