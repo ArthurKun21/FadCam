@@ -774,6 +774,21 @@
             <include android:id="@+id/group_mini_metal_detector" layout="@layout/item_mini_app_card" />
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false"
+            android:paddingStart="2dp"
+            android:paddingEnd="2dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="3dp">
+
+            <include android:id="@+id/group_mini_parking_marker" layout="@layout/item_mini_app_card" />
+            <include android:id="@+id/group_mini_qr_generator" layout="@layout/item_mini_app_card" />
+            <Space android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" android:layout_margin="3dp" />
+        </LinearLayout>
+
         <!-- About Section Header -->
         <TextView
             android:id="@+id/header_about"

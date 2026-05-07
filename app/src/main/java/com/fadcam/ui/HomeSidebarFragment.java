@@ -296,6 +296,11 @@ public class HomeSidebarFragment extends DialogFragment {
         // Metal Detector Mini App - Coming Soon
         View metalDetectorRow = view.findViewById(R.id.row_mini_app_metal_detector);
         if (metalDetectorRow != null) metalDetectorRow.setOnClickListener(v -> showMiniAppComingSoon(this, "metal_detector"));
+        // Parking Marker Mini App - Coming Soon
+        View parkingMarkerRow = view.findViewById(R.id.row_mini_app_parking_marker);
+        if (parkingMarkerRow != null) parkingMarkerRow.setOnClickListener(v -> showMiniAppComingSoon(this, "parking_marker"));
+        View qrGeneratorRow = view.findViewById(R.id.row_mini_app_qr_generator);
+        if (qrGeneratorRow != null) qrGeneratorRow.setOnClickListener(v -> showMiniAppComingSoon(this, "qr_generator"));
     }
 
     public static void showMiniAppComingSoon(Fragment fragment, String appId) {
@@ -335,6 +340,14 @@ public class HomeSidebarFragment extends DialogFragment {
                 case "metal_detector":
                     title = fragment.getString(R.string.mini_app_metal_detector_title);
                     desc = fragment.getString(R.string.mini_app_metal_detector_desc);
+                    break;
+                case "parking_marker":
+                    title = fragment.getString(R.string.mini_app_parking_marker_title);
+                    desc = fragment.getString(R.string.mini_app_parking_marker_desc);
+                    break;
+                case "qr_generator":
+                    title = fragment.getString(R.string.mini_app_qr_generator_title);
+                    desc = fragment.getString(R.string.mini_app_qr_generator_desc);
                     break;
             }
             

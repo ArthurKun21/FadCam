@@ -407,6 +407,12 @@ public class SettingsHomeFragment extends Fragment {
         setupMiniCard(root, R.id.group_mini_metal_detector, R.string.mini_app_metal_detector_title,
                 R.string.mini_app_metal_detector_desc, "travel_explore", R.string.mini_app_coming_soon,
                 () -> HomeSidebarFragment.showMiniAppComingSoon(this, "metal_detector"));
+        setupMiniCard(root, R.id.group_mini_parking_marker, R.string.mini_app_parking_marker_title,
+                R.string.mini_app_parking_marker_desc, "location_on", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "parking_marker"));
+        setupMiniCard(root, R.id.group_mini_qr_generator, R.string.mini_app_qr_generator_title,
+                R.string.mini_app_qr_generator_desc, "qr_code_2", R.string.mini_app_coming_soon,
+                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "qr_generator"));
     }
 
     private void bindRow(View root, int id, Runnable action) {

@@ -321,6 +321,10 @@ public class DebugLogBottomSheetFragment extends BottomSheetDialogFragment {
             Log.setDebugEnabled(isChecked);
         });
     row.addView(sw, new LinearLayout.LayoutParams(dp(52), dp(52)));
+        // Make entire row clickable, not just the avatar
+        row.setClickable(true);
+        row.setFocusable(true);
+        row.setOnClickListener(v -> sw.performClick());
     return row;
     }
 
