@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
+
+    <!-- Brightness controls strip at the bottom -->
+    <LinearLayout
+        android:id="@+id/screen_light_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="32dp"
+        android:background="#CC000000"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Close button -->
+        <ImageView
+            android:id="@+id/screen_light_close_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_close"
+            android:tint="@android:color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/button_close"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Dim icon -->
+        <TextView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="16dp"
+            android:fontFamily="@font/materialicons"
+            android:text="brightness_low"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:gravity="center"
+            android:contentDescription="@null" />
+
+        <!-- Brightness slider -->
+        <com.google.android.material.slider.Slider
+            android:id="@+id/screen_brightness_slider"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <!-- Bright icon -->
+        <TextView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:fontFamily="@font/materialicons"
+            android:text="brightness_high"
+            android:textSize="22sp"
+            android:textColor="@android:color/white"
+            android:gravity="center"
+            android:contentDescription="@null" />
+
+    </LinearLayout>
+
+</FrameLayout>

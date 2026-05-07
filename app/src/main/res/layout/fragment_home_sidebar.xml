@@ -206,6 +206,364 @@
 
         </LinearLayout>
 
+        <!-- Group: Mini Apps -->
+        <TextView
+            android:id="@+id/mini_apps_group_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/mini_apps_title"
+            android:textColor="?attr/colorHeading"
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp"
+            android:textStyle="bold"
+            android:textAlignment="viewStart"/>
+
+        <!-- Mini apps group card wrapper -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/settings_group_card_bg">
+
+            <!-- Torch Mini App -->
+            <LinearLayout
+                android:id="@+id/row_mini_app_torch"
+                style="@style/SettingsGroupRow"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <!-- Torch icon using Material Icons ligature -->
+                <TextView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/materialicons"
+                    android:text="flashlight_on"
+                    android:textColor="?attr/colorHeading"
+                    android:textSize="18sp"
+                    android:gravity="center" />
+
+                <!-- Torch title and subtitle -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_app_torch_title"
+                        android:textColor="?attr/colorHeading"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textAlignment="viewStart"
+                        android:layout_marginBottom="2dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_app_torch_desc"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="11sp"
+                        android:textAlignment="viewStart"
+                        android:maxLines="2"
+                        android:ellipsize="none" />
+
+                </LinearLayout>
+
+                <!-- Arrow -->
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_arrow_right"
+                    android:tint="@android:color/darker_gray" />
+
+            </LinearLayout>
+
+            <!-- Divider between mini apps -->
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="12dp"
+                app:dividerColor="#262626"/>
+
+            <!-- Compass Mini App - Coming Soon -->
+            <LinearLayout
+                android:id="@+id/row_mini_app_compass"
+                style="@style/SettingsGroupRow"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <!-- Compass icon using Material Icons ligature -->
+                <TextView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/materialicons"
+                    android:text="explore"
+                    android:textColor="?attr/colorHeading"
+                    android:textSize="18sp"
+                    android:gravity="center" />
+
+                <!-- Compass title and subtitle -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/mini_app_compass_title"
+                            android:textColor="?attr/colorHeading"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textAlignment="viewStart"
+                            android:layout_marginBottom="2dp" />
+
+                        <!-- Coming Soon Badge -->
+                        <TextView
+                            android:id="@+id/badge_compass_coming_soon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="16dp"
+                            android:paddingHorizontal="6dp"
+                            android:text="@string/mini_app_coming_soon"
+                            android:textColor="@android:color/white"
+                            android:textSize="8sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:background="@drawable/bg_coming_soon_badge"
+                            android:layout_marginStart="8dp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_app_compass_desc"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="11sp"
+                        android:textAlignment="viewStart"
+                        android:maxLines="2"
+                        android:ellipsize="none" />
+
+                </LinearLayout>
+
+                <!-- Arrow -->
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_arrow_right"
+                    android:tint="@android:color/darker_gray" />
+
+            </LinearLayout>
+
+            <!-- Divider between mini apps -->
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="12dp"
+                app:dividerColor="#262626"/>
+
+            <!-- Sound Meter Mini App - Coming Soon -->
+            <LinearLayout
+                android:id="@+id/row_mini_app_sound_meter"
+                style="@style/SettingsGroupRow"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <!-- Sound Meter icon using Material Icons ligature -->
+                <TextView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/materialicons"
+                    android:text="graphic_eq"
+                    android:textColor="?attr/colorHeading"
+                    android:textSize="18sp"
+                    android:gravity="center" />
+
+                <!-- Sound Meter title and subtitle -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/mini_app_sound_meter_title"
+                            android:textColor="?attr/colorHeading"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textAlignment="viewStart"
+                            android:layout_marginBottom="2dp" />
+
+                        <!-- Coming Soon Badge -->
+                        <TextView
+                            android:id="@+id/badge_sound_meter_coming_soon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="16dp"
+                            android:paddingHorizontal="6dp"
+                            android:text="@string/mini_app_coming_soon"
+                            android:textColor="@android:color/white"
+                            android:textSize="8sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:background="@drawable/bg_coming_soon_badge"
+                            android:layout_marginStart="8dp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_app_sound_meter_desc"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="11sp"
+                        android:textAlignment="viewStart"
+                        android:maxLines="2"
+                        android:ellipsize="none" />
+
+                </LinearLayout>
+
+                <!-- Arrow -->
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_arrow_right"
+                    android:tint="@android:color/darker_gray" />
+
+            </LinearLayout>
+
+            <!-- Divider between mini apps -->
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="12dp"
+                app:dividerColor="#262626"/>
+
+            <!-- Sensor Dashboard Mini App - Coming Soon -->
+            <LinearLayout
+                android:id="@+id/row_mini_app_sensor_dashboard"
+                style="@style/SettingsGroupRow"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <!-- Sensor Dashboard icon using Material Icons ligature -->
+                <TextView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    android:fontFamily="@font/materialicons"
+                    android:text="sensors"
+                    android:textColor="?attr/colorHeading"
+                    android:textSize="18sp"
+                    android:gravity="center" />
+
+                <!-- Sensor Dashboard title and subtitle -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/mini_app_sensor_dashboard_title"
+                            android:textColor="?attr/colorHeading"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textAlignment="viewStart"
+                            android:layout_marginBottom="2dp" />
+
+                        <!-- Coming Soon Badge -->
+                        <TextView
+                            android:id="@+id/badge_sensor_dashboard_coming_soon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="16dp"
+                            android:paddingHorizontal="6dp"
+                            android:text="@string/mini_app_coming_soon"
+                            android:textColor="@android:color/white"
+                            android:textSize="8sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:background="@drawable/bg_coming_soon_badge"
+                            android:layout_marginStart="8dp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_app_sensor_dashboard_desc"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="11sp"
+                        android:textAlignment="viewStart"
+                        android:maxLines="2"
+                        android:ellipsize="none" />
+
+                </LinearLayout>
+
+                <!-- Arrow -->
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_arrow_right"
+                    android:tint="@android:color/darker_gray" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
         <!-- Group: Help & Support -->
         <TextView
             android:id="@+id/help_group_title"

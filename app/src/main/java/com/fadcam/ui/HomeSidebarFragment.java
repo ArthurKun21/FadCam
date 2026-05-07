@@ -20,6 +20,8 @@ import com.fadcam.R;
 import com.fadcam.SharedPreferencesManager;
 import com.fadcam.ui.picker.OptionItem;
 import com.fadcam.ui.picker.PickerBottomSheetFragment;
+import com.fadcam.ui.miniapps.TorchToolFragment;
+import com.fadcam.ui.OverlayNavUtil;
 import com.google.android.material.sidesheet.SideSheetDialog;
 
 /**
@@ -228,6 +230,88 @@ public class HomeSidebarFragment extends DialogFragment {
                     FLog.w("HomeSidebar", "Failed to open Discord link", e);
                 }
             });
+        }
+
+        // Mini Apps Section
+        setupMiniAppRows(view);
+    }
+
+    private void setupMiniAppRows(View view) {
+        // Torch Mini App - open full screen tool
+        View torchRow = view.findViewById(R.id.row_mini_app_torch);
+        if (torchRow != null) {
+            torchRow.setOnClickListener(v -> {
+                try {
+                    TorchToolFragment torchTool = TorchToolFragment.newInstance();
+                    OverlayNavUtil.show(requireActivity(), torchTool, "torch_tool");
+                    dismiss();
+                } catch (Exception e) {
+                    FLog.w("HomeSidebar", "Failed to open torch tool", e);
+                }
+            });
+        }
+
+        // Compass Mini App - Coming Soon
+        View compassRow = view.findViewById(R.id.row_mini_app_compass);
+        if (compassRow != null) {
+            compassRow.setOnClickListener(v -> {
+                showMiniAppComingSoon("compass");
+            });
+        }
+
+        // Sound Meter Mini App - Coming Soon
+        View soundMeterRow = view.findViewById(R.id.row_mini_app_sound_meter);
+        if (soundMeterRow != null) {
+            soundMeterRow.setOnClickListener(v -> {
+                showMiniAppComingSoon("sound_meter");
+            });
+        }
+
+        // Sensor Dashboard Mini App - Coming Soon
+        View sensorDashboardRow = view.findViewById(R.id.row_mini_app_sensor_dashboard);
+        if (sensorDashboardRow != null) {
+            sensorDashboardRow.setOnClickListener(v -> {
+                showMiniAppComingSoon("sensor_dashboard");
+            });
+        }
+    }
+
+    private void showMiniAppComingSoon(String appId) {
+        try {
+            String title = null;
+            String desc = null;
+            
+            switch (appId) {
+                case "compass":
+                    title = getString(R.string.mini_app_compass_title);
+                    desc = getString(R.string.mini_app_compass_desc);
+                    break;
+                case "sound_meter":
+                    title = getString(R.string.mini_app_sound_meter_title);
+                    desc = getString(R.string.mini_app_sound_meter_desc);
+                    break;
+                case "sensor_dashboard":
+                    title = getString(R.string.mini_app_sensor_dashboard_title);
+                    desc = getString(R.string.mini_app_sensor_dashboard_desc);
+                    break;
+            }
+            
+            if (title == null) return;
+            
+            ArrayList<OptionItem> items = new ArrayList<>();
+            items.add(new OptionItem(appId, desc, (String) null));
+            
+            PickerBottomSheetFragment picker = PickerBottomSheetFragment.newInstance(
+                title,
+                items,
+                appId,
+                "mini_app_" + appId,
+                getString(R.string.mini_app_coming_soon_desc),
+                true // hide check since it's just info
+            );
+            picker.show(getParentFragmentManager(), "mini_app_coming_soon_" + appId);
+        } catch (Exception e) {
+            FLog.w("HomeSidebar", "Failed to show mini app coming soon", e);
         }
     }
 
