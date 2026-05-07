@@ -245,18 +245,26 @@ public class ScanInfoBottomSheet extends BottomSheetDialogFragment {
             int idx = rowLayout.indexOfChild(valueView);
             rowLayout.removeView(valueView);
 
+            // Get original layout params and ensure wrap_content height
+            ViewGroup.LayoutParams origParams = valueView.getLayoutParams();
+            LinearLayout.LayoutParams vrlp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT);
+            if (origParams instanceof LinearLayout.LayoutParams) {
+                vrlp.weight = ((LinearLayout.LayoutParams) origParams).weight;
+            }
+            vrlp.gravity = android.view.Gravity.CENTER_VERTICAL;
+
             LinearLayout valueRow = new LinearLayout(getContext());
             valueRow.setOrientation(LinearLayout.HORIZONTAL);
-            valueRow.setLayoutParams(valueView.getLayoutParams());
+            valueRow.setLayoutParams(vrlp);
+            valueRow.setBaselineAligned(false);
 
             TextView valText = new TextView(getContext());
-            valText.setTextSize(13);
+            valText.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
             valText.setTextColor(getResources().getColor(R.color.gray_text_light, null));
-            valText.setMaxLines(8);
-            valText.setEllipsize(null);
-            valText.setLineSpacing(dp(2), 1f);
             valText.setText(value != null ? value : "");
+            valText.setMaxLines(Integer.MAX_VALUE);
             LinearLayout.LayoutParams vp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            vp.gravity = android.view.Gravity.CENTER_VERTICAL;
             valText.setLayoutParams(vp);
             valueRow.addView(valText);
 

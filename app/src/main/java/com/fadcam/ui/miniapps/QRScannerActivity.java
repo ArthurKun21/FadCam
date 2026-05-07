@@ -45,6 +45,7 @@ import com.google.zxing.NotFoundException;
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.common.GlobalHistogramBinarizer;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -331,16 +332,120 @@ public class QRScannerActivity extends AppCompatActivity {
     }
 
     @Nullable private Result decodeImage(@NonNull ImageProxy image) {
+        int rotation = image.getImageInfo().getRotationDegrees();
+        int w = image.getWidth(), h = image.getHeight();
+        int yStride = image.getPlanes()[0].getRowStride();
+        byte[] packed = packYPlane(image);
+        FLog.d("QRScanner", "decode: w=" + w + " h=" + h + " stride=" + yStride
+                + " rot=" + rotation + " packed=" + packed.length);
+
+        // Physically rotate luminance to match display orientation — required for
+        // 1D barcodes. ZXing PlanarYUVLuminanceSource does NOT handle rotation.
+        byte[] rotated = rotateLuminance(packed, w, h, rotation);
+        int rw = (rotation == 90 || rotation == 270) ? h : w;
+        int rh = (rotation == 90 || rotation == 270) ? w : h;
+
+        PlanarYUVLuminanceSource src = new PlanarYUVLuminanceSource(
+                rotated, rw, rh, 0, 0, rw, rh, false);
+        Map<DecodeHintType,Object> hints = new EnumMap<>(DecodeHintType.class);
+        hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
+        hints.put(DecodeHintType.POSSIBLE_FORMATS, java.util.Arrays.asList(
+            BarcodeFormat.QR_CODE,BarcodeFormat.EAN_8,BarcodeFormat.EAN_13,BarcodeFormat.UPC_A,BarcodeFormat.UPC_E,
+            BarcodeFormat.CODE_39,BarcodeFormat.CODE_93,BarcodeFormat.CODE_128,BarcodeFormat.DATA_MATRIX,BarcodeFormat.AZTEC,BarcodeFormat.PDF_417));
+        MultiFormatReader reader = new MultiFormatReader(); reader.setHints(hints);
         try {
-            ByteBuffer buf = image.getPlanes()[0].getBuffer();
-            byte[] data = new byte[buf.remaining()]; buf.get(data);
-            PlanarYUVLuminanceSource src = new PlanarYUVLuminanceSource(data, image.getWidth(), image.getHeight(), 0, 0, image.getWidth(), image.getHeight(), false);
+            Result r = reader.decodeWithState(new BinaryBitmap(new HybridBinarizer(src)));
+            FLog.i("QRScanner","Decoded: " + r.getBarcodeFormat());
+            return r;
+        } catch (NotFoundException e) {
+            FLog.d("QRScanner","Not found in frame");
+            return null;
+        }
+    }
+
+    /** Physically rotates luminance data to match display orientation.
+     *  Based on journeyapps/zxing-android-embedded RawImageData.rotateCameraPreview(). */
+    private static byte[] rotateLuminance(byte[] data, int w, int h, int rotation) {
+        switch (rotation) {
+            case 90: {
+                byte[] out = new byte[w * h];
+                int i = 0;
+                for (int x = 0; x < w; x++)
+                    for (int y = h - 1; y >= 0; y--)
+                        out[i++] = data[y * w + x];
+                return out;
+            }
+            case 180: {
+                byte[] out = new byte[w * h];
+                int n = w * h;
+                for (int j = 0, i = n - 1; j < n; j++, i--)
+                    out[i] = data[j];
+                return out;
+            }
+            case 270: {
+                byte[] out = new byte[w * h];
+                int i = 0;
+                for (int x = w - 1; x >= 0; x--)
+                    for (int y = 0; y < h; y++)
+                        out[i++] = data[y * w + x];
+                return out;
+            }
+            default:
+                return data;
+        }
+    }
+
+    @Nullable private Result tryDecodeRaw(byte[] data, int w, int h) {
+        try {
+            PlanarYUVLuminanceSource src = new PlanarYUVLuminanceSource(data, w, h, 0, 0, w, h, false);
             Map<DecodeHintType,Object> hints = new EnumMap<>(DecodeHintType.class);
+            hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
             hints.put(DecodeHintType.POSSIBLE_FORMATS, java.util.Arrays.asList(
                 BarcodeFormat.QR_CODE,BarcodeFormat.EAN_8,BarcodeFormat.EAN_13,BarcodeFormat.UPC_A,BarcodeFormat.UPC_E,
                 BarcodeFormat.CODE_39,BarcodeFormat.CODE_93,BarcodeFormat.CODE_128,BarcodeFormat.DATA_MATRIX,BarcodeFormat.AZTEC,BarcodeFormat.PDF_417));
-            MultiFormatReader r = new MultiFormatReader(); r.setHints(hints);
-            return r.decodeWithState(new BinaryBitmap(new HybridBinarizer(src)));
+            MultiFormatReader reader = new MultiFormatReader(); reader.setHints(hints);
+            return reader.decodeWithState(new BinaryBitmap(new GlobalHistogramBinarizer(src)));
+        } catch (NotFoundException e) {
+            FLog.d("QRScanner", "Raw decode attempt also failed");
+            return null;
+        }
+    }
+
+    private static byte[] packYPlane(@NonNull ImageProxy image) {
+        ImageProxy.PlaneProxy yPlane = image.getPlanes()[0];
+        ByteBuffer buf = yPlane.getBuffer();
+        int w = image.getWidth(), h = image.getHeight();
+        int stride = yPlane.getRowStride();
+        byte[] packed = new byte[w * h];
+        if (stride == w) {
+            buf.get(packed);
+        } else {
+            int pos = 0;
+            for (int row = 0; row < h; row++) {
+                buf.position(row * stride);
+                buf.get(packed, pos, w);
+                pos += w;
+            }
+        }
+        return packed;
+    }
+
+    @Nullable private Result tryDecode(byte[] data, int w, int h, int rotation) {
+        try {
+            // Swap dimensions if rotation is 90/270 (camera sensor vs display orientation)
+            if (rotation == 90 || rotation == 270) { int t = w; w = h; h = t; }
+            PlanarYUVLuminanceSource src = new PlanarYUVLuminanceSource(data, w, h, 0, 0, w, h, false);
+            Map<DecodeHintType,Object> hints = new EnumMap<>(DecodeHintType.class);
+            hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
+            hints.put(DecodeHintType.POSSIBLE_FORMATS, java.util.Arrays.asList(
+                BarcodeFormat.QR_CODE,BarcodeFormat.EAN_8,BarcodeFormat.EAN_13,BarcodeFormat.UPC_A,BarcodeFormat.UPC_E,
+                BarcodeFormat.CODE_39,BarcodeFormat.CODE_93,BarcodeFormat.CODE_128,BarcodeFormat.DATA_MATRIX,BarcodeFormat.AZTEC,BarcodeFormat.PDF_417));
+            MultiFormatReader reader = new MultiFormatReader(); reader.setHints(hints);
+            // GlobalHistogramBinarizer is the correct choice for camera frames
+            // with 1D barcodes. HybridBinarizer uses local binarization for images
+            // > 40px (1920x1920 qualifies), which creates noise that breaks 1D
+            // row scanning. Global histogram creates a clean binary image.
+            return reader.decodeWithState(new BinaryBitmap(new GlobalHistogramBinarizer(src)));
         } catch (NotFoundException e) { return null; }
     }
 
