@@ -420,6 +420,7 @@
     <string name="records_filter_faditor_converted">Converted</string>
     <string name="records_filter_faditor_merge">Merge</string>
     <string name="records_filter_shot_all">All</string>
+    <string name="records_filter_miniapps_all">All</string>
     <string name="records_filter_shot_back">Back</string>
     <string name="records_filter_shot_selfie">Selfie</string>
     <string name="records_filter_shot_fadrec">FadRec</string>

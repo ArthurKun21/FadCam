@@ -670,7 +670,7 @@
             </LinearLayout>
             <View style="@style/SettingsDivider" />
 
-            <!-- QR Scanner Mini App -->
+            <!-- QR Scanner Mini App (ready) -->
             <LinearLayout
                 android:id="@+id/row_mini_app_qr_scanner"
                 style="@style/SettingsGroupRow">

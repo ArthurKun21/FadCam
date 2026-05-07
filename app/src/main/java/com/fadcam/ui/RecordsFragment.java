@@ -97,6 +97,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -371,6 +372,10 @@ public class RecordsFragment extends BaseFragment implements
     private android.widget.ImageView selectAllCheck;
     private CharSequence originalToolbarTitle;
     private com.fadcam.ui.utils.AnimatedChip chipFilterAll;
+    private com.fadcam.ui.utils.AnimatedChip chipFilterMiniApps;
+    private ChipGroup chipGroupMiniAppsFilter;
+    private com.fadcam.ui.utils.AnimatedChip chipMiniAppsAll;
+    private com.fadcam.ui.utils.AnimatedChip chipMiniAppsQR;
     private com.fadcam.ui.utils.AnimatedChip chipFilterCamera;
     private com.fadcam.ui.utils.AnimatedChip chipFilterScreen;
     private com.fadcam.ui.utils.AnimatedChip chipFilterFaditor;
@@ -389,6 +394,7 @@ public class RecordsFragment extends BaseFragment implements
     private com.fadcam.ui.utils.AnimatedChip chipFaditorConverted;
     private com.fadcam.ui.utils.AnimatedChip chipFaditorMerge;
     private View shotFilterRow;
+    private View miniappsFilterRow;
     private ChipGroup chipGroupShotFilter;
     private com.fadcam.ui.utils.AnimatedChip chipShotAll;
     private com.fadcam.ui.utils.AnimatedChip chipShotBack;
@@ -405,6 +411,7 @@ public class RecordsFragment extends BaseFragment implements
     private VideoItem.CameraSubtype activeCameraSubtype = VideoItem.CameraSubtype.ALL;
     private VideoItem.FaditorSubtype activeFaditorSubtype = VideoItem.FaditorSubtype.ALL;
     private VideoItem.ShotSubtype activeShotSubtype = VideoItem.ShotSubtype.ALL;
+    private String activeMiniAppsSubtype = null; // null=ALL, "QR"=QRScanner
     private ActivityResultLauncher<Uri> customExportTreePickerLauncher;
     private List<Uri> pendingCustomExportUris = new ArrayList<>();
     private BroadcastReceiver batchMediaCompletedReceiver;
@@ -1668,11 +1675,17 @@ public class RecordsFragment extends BaseFragment implements
         chipFaditorConverted = view.findViewById(R.id.chip_faditor_converted);
         chipFaditorMerge = view.findViewById(R.id.chip_faditor_merge);
         shotFilterRow = view.findViewById(R.id.records_shot_filter_row);
+        miniappsFilterRow = view.findViewById(R.id.records_miniapps_filter_row);
         chipGroupShotFilter = view.findViewById(R.id.chip_group_shot_filter);
         chipShotAll = view.findViewById(R.id.chip_shot_all);
         chipShotBack = view.findViewById(R.id.chip_shot_back);
         chipShotSelfie = view.findViewById(R.id.chip_shot_selfie);
         chipShotFadrec = view.findViewById(R.id.chip_shot_fadrec);
+
+        chipFilterMiniApps = view.findViewById(R.id.chip_filter_miniapps);
+        chipGroupMiniAppsFilter = view.findViewById(R.id.chip_group_miniapps_filter);
+        chipMiniAppsAll = view.findViewById(R.id.chip_miniapps_all);
+        chipMiniAppsQR = view.findViewById(R.id.chip_miniapps_qr);
         filterHelperText = view.findViewById(R.id.filter_helper_text);
         filterChecklistButton = view.findViewById(R.id.btn_filter_checklist);
         selectionActionsRow = view.findViewById(R.id.selection_actions_row);
@@ -3258,6 +3271,9 @@ public class RecordsFragment extends BaseFragment implements
         if (chipFilterShot != null) {
             chipFilterShot.setOnClickListener(v -> setActiveFilter(VideoItem.Category.SHOT));
         }
+        if (chipFilterMiniApps != null) {
+            chipFilterMiniApps.setOnClickListener(v -> setActiveFilter(VideoItem.Category.MINIAPPS));
+        }
         if (chipCameraAll != null) {
             chipCameraAll.setOnClickListener(v -> setActiveCameraSubtype(VideoItem.CameraSubtype.ALL));
         }
@@ -3291,6 +3307,12 @@ public class RecordsFragment extends BaseFragment implements
         if (chipShotFadrec != null) {
             chipShotFadrec.setOnClickListener(v -> setActiveShotSubtype(VideoItem.ShotSubtype.FADREC));
         }
+        if (chipMiniAppsAll != null) {
+            chipMiniAppsAll.setOnClickListener(v -> setActiveMiniAppsSubtype(null));
+        }
+        if (chipMiniAppsQR != null) {
+            chipMiniAppsQR.setOnClickListener(v -> setActiveMiniAppsSubtype("QR"));
+        }
         if (filterChecklistButton != null) {
             filterChecklistButton.setOnClickListener(v -> {
                 if (isInSelectionMode) {
@@ -3311,6 +3333,9 @@ public class RecordsFragment extends BaseFragment implements
         updateShotFilterRowVisibility();
         updateShotFilterChipLabels();
         updateShotFilterChipUi();
+        updateMiniAppsFilterRowVisibility();
+        updateMiniAppsFilterChipLabels();
+        updateMiniAppsFilterChipUi();
         updateFilterHelperText();
     }
 
@@ -3367,6 +3392,13 @@ public class RecordsFragment extends BaseFragment implements
         applyActiveFilterToUi();
     }
 
+    private void setActiveMiniAppsSubtype(@Nullable String subtype) {
+        if (Objects.equals(activeMiniAppsSubtype, subtype)) return;
+        activeMiniAppsSubtype = subtype;
+        if (isInSelectionMode) exitSelectionMode();
+        applyActiveFilterToUi();
+    }
+
     private void setActiveShotSubtype(@NonNull VideoItem.ShotSubtype shotSubtype) {
         if (activeShotSubtype == shotSubtype) return;
         activeShotSubtype = shotSubtype;
@@ -3398,6 +3430,10 @@ public class RecordsFragment extends BaseFragment implements
                 if (activeFilter == VideoItem.Category.SHOT && !matchesShotSubtype(item, activeShotSubtype)) {
                     continue;
                 }
+                if (activeFilter == VideoItem.Category.MINIAPPS && "QR".equals(activeMiniAppsSubtype)
+                        && !item.uri.toString().contains("QRScanner")) {
+                    continue;
+                }
                 filteredItems.add(item);
             }
         }
@@ -3417,6 +3453,9 @@ public class RecordsFragment extends BaseFragment implements
         updateShotFilterRowVisibility();
         updateShotFilterChipLabels();
         updateShotFilterChipUi();
+        updateMiniAppsFilterRowVisibility();
+        updateMiniAppsFilterChipLabels();
+        updateMiniAppsFilterChipUi();
         updateFilterHelperText();
         updateUiVisibility();
         updateSelectionActionRow();
@@ -3429,6 +3468,7 @@ public class RecordsFragment extends BaseFragment implements
         if (chipFilterFaditor != null) chipFilterFaditor.setChecked(activeFilter == VideoItem.Category.FADITOR);
         if (chipFilterStream != null) chipFilterStream.setChecked(activeFilter == VideoItem.Category.STREAM);
         if (chipFilterShot != null) chipFilterShot.setChecked(activeFilter == VideoItem.Category.SHOT);
+        if (chipFilterMiniApps != null) chipFilterMiniApps.setChecked(activeFilter == VideoItem.Category.MINIAPPS);
     }
 
     private void updateCameraFilterRowVisibility() {
@@ -3590,6 +3630,46 @@ public class RecordsFragment extends BaseFragment implements
         if (chipShotFadrec != null) chipShotFadrec.setChecked(activeShotSubtype == VideoItem.ShotSubtype.FADREC);
     }
 
+    private void updateMiniAppsFilterRowVisibility() {
+        if (miniappsFilterRow == null) return;
+        boolean shouldShow = activeFilter == VideoItem.Category.MINIAPPS;
+        if (shouldShow) {
+            miniappsFilterRow.setVisibility(View.VISIBLE);
+            miniappsFilterRow.setAlpha(0f); miniappsFilterRow.setScaleY(0.3f); miniappsFilterRow.setTranslationY(-20f);
+            miniappsFilterRow.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(400)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(1.5f)).start();
+        } else {
+            miniappsFilterRow.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateMiniAppsFilterChipUi() {
+        if (chipMiniAppsAll != null) chipMiniAppsAll.setChecked(activeMiniAppsSubtype == null);
+        if (chipMiniAppsQR != null) chipMiniAppsQR.setChecked("QR".equals(activeMiniAppsSubtype));
+    }
+
+    private void updateMiniAppsFilterChipLabels() {
+        int all = getMiniAppsSubtypeCount(null);
+        int qr = getMiniAppsSubtypeCount("QR");
+        setChipLabelWithCount(chipMiniAppsAll, R.string.records_filter_miniapps_all, all);
+        if (chipMiniAppsQR != null) {
+            chipMiniAppsQR.animateSlot("QR (" + qr + ")", 300);
+        }
+    }
+
+    private int getMiniAppsSubtypeCount(@Nullable String subtype) {
+        int count = 0;
+        for (VideoItem item : allLoadedItems) {
+            if (item.category != VideoItem.Category.MINIAPPS) continue;
+            if (subtype == null) {
+                count++;
+            } else if ("QR".equals(subtype) && item.uri.toString().contains("QRScanner")) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private boolean matchesShotSubtype(@NonNull VideoItem item, @NonNull VideoItem.ShotSubtype filterSubtype) {
         if (item.category != VideoItem.Category.SHOT) return false;
         if (filterSubtype == VideoItem.ShotSubtype.ALL) return true;
@@ -3609,6 +3689,7 @@ public class RecordsFragment extends BaseFragment implements
         applyChipIcon(chipFilterFaditor, R.drawable.ic_edit_cut);
         applyChipIcon(chipFilterStream, R.drawable.ic_wifi);
         applyChipIcon(chipFilterShot, R.drawable.ic_chip_add_a_photo);
+        applyChipIcon(chipFilterMiniApps, R.drawable.ic_settings);
         applyChipIcon(chipCameraAll, R.drawable.ic_list);
         applyChipIcon(chipCameraBack, R.drawable.ic_chip_video_camera_back);
         applyChipIcon(chipCameraFront, R.drawable.ic_chip_video_camera_front);
@@ -3616,6 +3697,8 @@ public class RecordsFragment extends BaseFragment implements
         applyChipIcon(chipFaditorAll, R.drawable.ic_list);
         applyChipIcon(chipFaditorConverted, R.drawable.ic_update);
         applyChipIcon(chipFaditorMerge, R.drawable.ic_split_file);
+        applyChipIcon(chipMiniAppsAll, R.drawable.ic_list);
+        applyChipIcon(chipMiniAppsQR, R.drawable.ic_settings);
         applyChipIcon(chipShotAll, R.drawable.ic_list);
         applyChipIcon(chipShotBack, R.drawable.ic_chip_photo_camera);
         applyChipIcon(chipShotSelfie, R.drawable.ic_chip_photo_camera_front);
@@ -3626,6 +3709,7 @@ public class RecordsFragment extends BaseFragment implements
         styleFilterChip(chipFilterFaditor);
         styleFilterChip(chipFilterStream);
         styleFilterChip(chipFilterShot);
+        styleFilterChip(chipFilterMiniApps);
         styleFilterChip(chipCameraAll);
         styleFilterChip(chipCameraBack);
         styleFilterChip(chipCameraFront);
@@ -3633,6 +3717,8 @@ public class RecordsFragment extends BaseFragment implements
         styleFilterChip(chipFaditorAll);
         styleFilterChip(chipFaditorConverted);
         styleFilterChip(chipFaditorMerge);
+        styleFilterChip(chipMiniAppsAll);
+        styleFilterChip(chipMiniAppsQR);
         styleFilterChip(chipShotAll);
         styleFilterChip(chipShotBack);
         styleFilterChip(chipShotSelfie);
@@ -3695,6 +3781,7 @@ public class RecordsFragment extends BaseFragment implements
         int faditor = getCategoryCount(VideoItem.Category.FADITOR);
         int stream = getCategoryCount(VideoItem.Category.STREAM);
         int shot = getCategoryCount(VideoItem.Category.SHOT);
+        int miniapps = getCategoryCount(VideoItem.Category.MINIAPPS);
 
         setChipLabelWithCount(chipFilterAll, R.string.records_filter_all, all);
         setChipLabelWithCount(chipFilterCamera, R.string.records_filter_camera, camera);
@@ -3702,8 +3789,11 @@ public class RecordsFragment extends BaseFragment implements
         setChipLabelWithCount(chipFilterFaditor, R.string.records_filter_faditor, faditor);
         setChipLabelWithCount(chipFilterStream, R.string.records_filter_stream, stream);
         setChipLabelWithCount(chipFilterShot, R.string.records_filter_shot, shot);
+        if (chipFilterMiniApps != null) {
+            chipFilterMiniApps.animateSlot("Mini Apps (" + miniapps + ")", 300);
+        }
 
-        reorderFilterChipsByCount(camera, screen, faditor, stream, shot);
+        reorderFilterChipsByCount(camera, screen, faditor, stream, shot, miniapps);
     }
 
     private void updateCameraFilterChipLabels() {
@@ -3780,7 +3870,7 @@ public class RecordsFragment extends BaseFragment implements
         return count;
     }
 
-    private void reorderFilterChipsByCount(int camera, int screen, int faditor, int stream, int shot) {
+    private void reorderFilterChipsByCount(int camera, int screen, int faditor, int stream, int shot, int miniapps) {
         if (chipGroupRecordsFilter == null || chipFilterAll == null) return;
         List<ChipOrderItem> ordered = new ArrayList<>();
         ordered.add(new ChipOrderItem(chipFilterCamera, camera));
@@ -3788,6 +3878,7 @@ public class RecordsFragment extends BaseFragment implements
         ordered.add(new ChipOrderItem(chipFilterFaditor, faditor));
         ordered.add(new ChipOrderItem(chipFilterStream, stream));
         ordered.add(new ChipOrderItem(chipFilterShot, shot));
+        ordered.add(new ChipOrderItem(chipFilterMiniApps, miniapps));
         Collections.sort(ordered, (a, b) -> Integer.compare(b.count, a.count));
 
         chipGroupRecordsFilter.removeAllViews();
@@ -3812,6 +3903,8 @@ public class RecordsFragment extends BaseFragment implements
                 return R.id.chip_filter_stream;
             case SHOT:
                 return R.id.chip_filter_shot;
+            case MINIAPPS:
+                return R.id.chip_filter_miniapps;
             case UNKNOWN:
             case ALL:
             default:

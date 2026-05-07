@@ -1,5 +1,6 @@
 package com.fadcam.ui;
 
+import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -399,8 +400,11 @@ public class SettingsHomeFragment extends Fragment {
                 R.string.mini_app_clinometer_desc, "architecture", R.string.mini_app_coming_soon,
                 () -> HomeSidebarFragment.showMiniAppComingSoon(this, "clinometer"));
         setupMiniCard(root, R.id.group_mini_qr_scanner, R.string.mini_app_qr_scanner_title,
-                R.string.mini_app_qr_scanner_desc, "qr_code_scanner", R.string.mini_app_coming_soon,
-                () -> HomeSidebarFragment.showMiniAppComingSoon(this, "qr_scanner"));
+                R.string.mini_app_qr_scanner_desc, "qr_code_scanner", 0, // no "Soon" badge — it's ready
+                () -> {
+                    Intent intent = new Intent(requireContext(), com.fadcam.ui.miniapps.QRScannerActivity.class);
+                    startActivity(intent);
+                });
         setupMiniCard(root, R.id.group_mini_pedometer, R.string.mini_app_pedometer_title,
                 R.string.mini_app_pedometer_desc, "directions_walk", R.string.mini_app_coming_soon,
                 () -> HomeSidebarFragment.showMiniAppComingSoon(this, "pedometer"));

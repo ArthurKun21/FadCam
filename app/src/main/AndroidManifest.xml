@@ -350,6 +350,12 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ui.miniapps.QRScannerActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:exported="false"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ScreenShotCaptureActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:excludeFromRecents="true"

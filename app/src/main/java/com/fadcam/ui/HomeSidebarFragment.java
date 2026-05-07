@@ -287,9 +287,13 @@ public class HomeSidebarFragment extends DialogFragment {
         // Clinometer Mini App - Coming Soon
         View clinometerRow = view.findViewById(R.id.row_mini_app_clinometer);
         if (clinometerRow != null) clinometerRow.setOnClickListener(v -> showMiniAppComingSoon(this, "clinometer"));
-        // QR Scanner Mini App - Coming Soon
+        // QR Scanner Mini App - ready to use
         View qrScannerRow = view.findViewById(R.id.row_mini_app_qr_scanner);
-        if (qrScannerRow != null) qrScannerRow.setOnClickListener(v -> showMiniAppComingSoon(this, "qr_scanner"));
+        if (qrScannerRow != null) qrScannerRow.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), com.fadcam.ui.miniapps.QRScannerActivity.class);
+            startActivity(intent);
+            dismiss();
+        });
         // Pedometer Mini App - Coming Soon
         View pedometerRow = view.findViewById(R.id.row_mini_app_pedometer);
         if (pedometerRow != null) pedometerRow.setOnClickListener(v -> showMiniAppComingSoon(this, "pedometer"));
