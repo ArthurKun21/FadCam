@@ -89,7 +89,6 @@ public class QRScannerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_qr_scanner);
         ivTorch = findViewById(R.id.qr_torch);
         ImageView ivClose = findViewById(R.id.qr_close);
-        ImageView ivInfo = findViewById(R.id.qr_info);
         scanLine = findViewById(R.id.qr_scan_line);
         resultContainer = findViewById(R.id.qr_result_container);
         rt = findViewById(R.id.qr_result_text);
@@ -99,7 +98,6 @@ public class QRScannerActivity extends AppCompatActivity {
 
         if (ivClose != null) ivClose.setOnClickListener(v -> finish());
         if (ivTorch != null) ivTorch.setOnClickListener(v -> toggleTorch());
-        if (ivInfo != null) ivInfo.setOnClickListener(v -> showInfoDialog());
 
         View headerBar = findViewById(R.id.qr_header_bar);
         if (headerBar != null) headerBar.setOnApplyWindowInsetsListener((v, ins) -> {
@@ -259,8 +257,11 @@ public class QRScannerActivity extends AppCompatActivity {
     }
 
     private void showScanResult(String text, String format) {
+        // Haptic feedback
         View root = findViewById(android.R.id.content);
-        if (root != null) root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+        if (root != null) root.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+        
+        // Play beep
         try {
             android.media.MediaPlayer mp = new android.media.MediaPlayer();
             android.content.res.AssetFileDescriptor afd = getAssets().openFd("audio/qrscanner_beep.mp3");
@@ -271,23 +272,29 @@ public class QRScannerActivity extends AppCompatActivity {
             mp.setOnCompletionListener(android.media.MediaPlayer::release);
         } catch (Exception e) { FLog.w("QRScanner", "Beep failed", e); }
         
+        // Hide scan line
         if (scanLine != null) { 
             scanLine.clearAnimation(); 
             scanLine.setVisibility(View.GONE); 
         }
         
+        // Set result text
         if (rt != null) { 
             rt.setText(text); 
         }
         
+        // Slide-up animation for result
         if (resultContainer != null) {
             resultContainer.setVisibility(View.VISIBLE);
+            resultContainer.setTranslationY(400);
+            resultContainer.animate()
+                    .translationY(0)
+                    .setDuration(450)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                    .start();
         }
         
-        if (ht != null) {
-            ht.setVisibility(View.GONE);
-        }
-        
+        // Copy button
         if (btnCopy != null) {
             btnCopy.setOnClickListener(v -> {
                 ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -296,12 +303,17 @@ public class QRScannerActivity extends AppCompatActivity {
             });
         }
         
+        // Scan again button with fade-out
         if (btnAgain != null) {
             btnAgain.setOnClickListener(v -> {
-                if (resultContainer != null) resultContainer.setVisibility(View.GONE);
-                if (ht != null) ht.setVisibility(View.VISIBLE);
-                isScanning.set(true);
-                startScanLineAnimation();
+                if (resultContainer != null) {
+                    resultContainer.animate().alpha(0).setDuration(300).withEndAction(() -> {
+                        resultContainer.setVisibility(View.GONE);
+                        resultContainer.setAlpha(1f);
+                        isScanning.set(true);
+                        startScanLineAnimation();
+                    }).start();
+                }
             });
         }
     }
@@ -462,11 +474,14 @@ public class QRScannerActivity extends AppCompatActivity {
 
     private void startScanLineAnimation() {
         if (scanLine == null) return;
-        scanLine.setVisibility(View.VISIBLE); scanLine.clearAnimation();
-        scanLine.startAnimation(new TranslateAnimation(Animation.RELATIVE_TO_PARENT,0f,Animation.RELATIVE_TO_PARENT,0f,
-                Animation.RELATIVE_TO_PARENT,0f,Animation.RELATIVE_TO_PARENT,1f) {{
-            setDuration(2500); setRepeatCount(Animation.INFINITE); setRepeatMode(Animation.RESTART);
-        }});
+        scanLine.setVisibility(View.VISIBLE); 
+        scanLine.clearAnimation();
+        TranslateAnimation anim = new TranslateAnimation(0, 0, -224, 224);
+        anim.setDuration(2200);
+        anim.setRepeatCount(Animation.INFINITE);
+        anim.setRepeatMode(Animation.REVERSE);
+        anim.setInterpolator(new android.view.animation.LinearInterpolator());
+        scanLine.startAnimation(anim);
     }
 
     private void toggleTorch() {
@@ -479,20 +494,7 @@ public class QRScannerActivity extends AppCompatActivity {
         }
     }
 
-    private void showInfoDialog() {
-        if (lastScannedText == null) {
-            Toast.makeText(this, "Scan something first to see info", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        String sb = "Format: " + lastScannedFormat + "\n\n"
-                + "Value:\n" + lastScannedText + "\n\n"
-                + "Saved: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(lastScannedTime) + "\n"
-                + "File: FadCam_MiniApps_QRScanner_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(lastScannedTime) + ".jpg";
-        new AlertDialog.Builder(this, com.google.android.material.R.style.MaterialAlertDialog_Material3)
-                .setTitle("Last Scan Info")
-                .setMessage(sb)
-                .setPositiveButton("Got it", null).show();
-    }
+
 
     @Override protected void onDestroy() {
         super.onDestroy();

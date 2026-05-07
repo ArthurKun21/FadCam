@@ -2362,6 +2362,9 @@ For the smoothest playback experience, you can use an external player like VLC. 
     <!-- Generic Buttons -->
     <string name="button_close">Close</string>
     <string name="button_info">Info</string>
+    <string name="button_copy">Copy</string>
+    <string name="button_scan_again">Scan Again</string>
+    <string name="button_torch">Torch</string>
 
     <!-- Pattern Descriptions -->
     <string name="pattern_steady_desc">Continuous steady light for normal flashlight use</string>
