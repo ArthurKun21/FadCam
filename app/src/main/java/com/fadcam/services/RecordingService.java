@@ -275,6 +275,10 @@ public class RecordingService extends Service {
         // are now initialized lazily in the START_RECORDING intent handler
         // — NOT here in onCreate — to prevent mic/sensor memory leaks
         // during preview-only mode and while the service is idle.
+        //
+        // Kill any zombie NoiseMonitor from a previous session that may have
+        // been leaked before this fix was applied.
+        com.fadcam.audio.NoiseMonitor.resetInstance();
 
         createNotificationChannel(); // Setup notifications early
 
