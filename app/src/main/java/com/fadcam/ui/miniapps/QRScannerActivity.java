@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Size;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
@@ -21,6 +22,8 @@ import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -46,6 +49,7 @@ import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.common.GlobalHistogramBinarizer;
+import com.google.zxing.RGBLuminanceSource;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -82,6 +86,7 @@ public class QRScannerActivity extends AppCompatActivity {
     private String lastScannedFormat;
     private Date lastScannedTime;
     private androidx.camera.core.Camera camera;
+    private ActivityResultLauncher<String> galleryLauncher;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -98,6 +103,15 @@ public class QRScannerActivity extends AppCompatActivity {
 
         if (ivClose != null) ivClose.setOnClickListener(v -> finish());
         if (ivTorch != null) ivTorch.setOnClickListener(v -> toggleTorch());
+
+        // Gallery button
+        View galleryBtn = findViewById(R.id.qr_gallery);
+        if (galleryBtn != null) galleryBtn.setOnClickListener(v -> galleryLauncher.launch("image/*"));
+
+        // Register image picker
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                this::onGalleryImagePicked);
 
         View headerBar = findViewById(R.id.qr_header_bar);
         if (headerBar != null) headerBar.setOnApplyWindowInsetsListener((v, ins) -> {
@@ -316,6 +330,58 @@ public class QRScannerActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void onGalleryImagePicked(Uri uri) {
+        if (uri == null) return;
+        FLog.i("QRScanner", "Gallery image picked: " + uri);
+        try {
+            Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
+            if (bitmap == null) {
+                Toast.makeText(this, "Could not load image", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Result result = decodeBitmap(bitmap);
+            if (result != null) {
+                String text = result.getText();
+                String format = result.getBarcodeFormat().name();
+                FLog.i("QRScanner", "Gallery decoded: " + text + " (" + format + ")");
+                lastScannedText = text;
+                lastScannedFormat = format;
+                lastScannedTime = new Date();
+                if (isScanning.compareAndSet(true, false)) {
+                    isScanning.set(true); // re-enable since we're not stopping camera scanning
+                    showScanResult(text, format);
+                    final Bitmap bmp = bitmap;
+                    final String t = text, f = format;
+                    cameraExecutor.execute(() -> saveScan(t, f, bmp));
+                }
+            } else {
+                Toast.makeText(this, "No barcode found in image", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            FLog.e("QRScanner", "Gallery decode error", e);
+            Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** Decodes barcodes from a Bitmap using ZXing RGBLuminanceSource. */
+    @Nullable private Result decodeBitmap(@NonNull Bitmap bitmap) {
+        int w = bitmap.getWidth(), h = bitmap.getHeight();
+        int[] pixels = new int[w * h];
+        bitmap.getPixels(pixels, 0, w, 0, 0, w, h);
+        RGBLuminanceSource src = new RGBLuminanceSource(w, h, pixels);
+        Map<DecodeHintType,Object> hints = new EnumMap<>(DecodeHintType.class);
+        hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
+        hints.put(DecodeHintType.POSSIBLE_FORMATS, java.util.Arrays.asList(
+            BarcodeFormat.QR_CODE, BarcodeFormat.EAN_8, BarcodeFormat.EAN_13,
+            BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
+            BarcodeFormat.CODE_39, BarcodeFormat.CODE_93, BarcodeFormat.CODE_128,
+            BarcodeFormat.DATA_MATRIX, BarcodeFormat.AZTEC, BarcodeFormat.PDF_417));
+        MultiFormatReader reader = new MultiFormatReader(); reader.setHints(hints);
+        try {
+            return reader.decodeWithState(new BinaryBitmap(new HybridBinarizer(src)));
+        } catch (NotFoundException e) { return null; }
     }
 
     private void saveScan(String text, String format, Bitmap frameBitmap) {

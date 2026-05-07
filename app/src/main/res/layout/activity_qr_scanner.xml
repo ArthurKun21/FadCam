@@ -73,6 +73,20 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/qr_gallery"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:gravity="center"
+            android:text="photo_library"
+            android:textSize="22sp"
+            android:fontFamily="@font/materialicons"
+            android:textColor="@android:color/white"
+            android:background="@drawable/settings_home_row_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="8dp" />
+
         <ImageView
             android:id="@+id/qr_torch"
             android:layout_width="36dp"
