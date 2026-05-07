@@ -2934,6 +2934,8 @@ public class RecordsFragment extends BaseFragment implements
                     : new Intent(getActivity(), VideoPlayerActivity.class);
             intent.setData(videoItem.uri);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.putExtra("item_category", videoItem.category.name());
+            intent.putExtra("item_display_name", videoItem.displayName);
             try {
                 startActivity(intent);
             } catch (Exception e) {
