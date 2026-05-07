@@ -235,6 +235,15 @@ public class HomeSidebarFragment extends DialogFragment {
 
         // Mini Apps Section
         setupMiniAppRows(view);
+
+        // Mini Apps Info Button
+        View btnMiniAppsInfo = view.findViewById(R.id.btn_mini_apps_info);
+        if (btnMiniAppsInfo != null) {
+            btnMiniAppsInfo.setOnClickListener(v -> {
+                MiniAppsInfoBottomSheet infoBS = MiniAppsInfoBottomSheet.newInstance();
+                infoBS.show(getParentFragmentManager(), "mini_apps_info");
+            });
+        }
     }
 
     @Override

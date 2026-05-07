@@ -207,16 +207,37 @@
         </LinearLayout>
 
         <!-- Group: Mini Apps -->
-        <TextView
-            android:id="@+id/mini_apps_group_title"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/mini_apps_title"
-            android:textColor="?attr/colorHeading"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:paddingTop="20dp"
-            android:paddingBottom="8dp"
-            android:textStyle="bold"
-            android:textAlignment="viewStart"/>
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/mini_apps_group_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/mini_apps_title"
+                android:textColor="?attr/colorHeading"
+                android:textStyle="bold"
+                android:textAlignment="viewStart"/>
+
+            <ImageView
+                android:id="@+id/btn_mini_apps_info"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:padding="2dp"
+                android:src="@drawable/ic_info"
+                android:tint="?attr/colorHeading"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Mini Apps Info" />
+
+        </LinearLayout>
 
         <!-- Mini apps group card wrapper -->
         <LinearLayout
@@ -284,6 +305,70 @@
                     android:src="@drawable/ic_arrow_right"
                     android:tint="@android:color/darker_gray" />
 
+            </LinearLayout>
+
+            <!-- Divider between mini apps -->
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="12dp"
+                app:dividerColor="#262626"/>
+
+            <!-- QR Scanner Mini App (READY) -->
+            <LinearLayout
+                android:id="@+id/row_mini_app_qr_scanner"
+                style="@style/SettingsGroupRow"
+                android:layout_height="wrap_content"
+                android:minHeight="56dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="16dp"
+                    android:gravity="center"
+                    android:text="qr_code_scanner"
+                    android:textSize="20sp"
+                    android:textColor="?attr/colorHeading"
+                    android:fontFamily="@font/materialicons" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_app_qr_scanner_title"
+                        android:textStyle="bold"
+                        android:textSize="15sp"
+                        android:textColor="?attr/colorHeading"
+                        android:textAlignment="viewStart"
+                        android:layout_marginBottom="2dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mini_app_qr_scanner_desc"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="11sp"
+                        android:textAlignment="viewStart"
+                        android:maxLines="2"
+                        android:ellipsize="none" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_arrow_right"
+                    android:tint="@android:color/darker_gray"/>
             </LinearLayout>
 
             <!-- Divider between mini apps -->
@@ -646,59 +731,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/mini_app_clinometer_desc"
-                        android:textColor="@android:color/darker_gray"
-                        android:textSize="12sp"/>
-                </LinearLayout>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_coming_soon_badge"
-                    android:paddingStart="6dp"
-                    android:paddingEnd="6dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
-                    android:text="@string/mini_app_coming_soon"
-                    android:textColor="#FFFFFF"
-                    android:textSize="9sp"
-                    android:textStyle="bold" />
-                <ImageView
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
-                    android:src="@drawable/ic_arrow_right"
-                    android:tint="@android:color/darker_gray"/>
-            </LinearLayout>
-            <View style="@style/SettingsDivider" />
-
-            <!-- QR Scanner Mini App (ready) -->
-            <LinearLayout
-                android:id="@+id/row_mini_app_qr_scanner"
-                style="@style/SettingsGroupRow">
-                <TextView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="16dp"
-                    android:gravity="center"
-                    android:text="qr_code_scanner"
-                    android:textSize="22sp"
-                    android:textColor="?attr/colorHeading"
-                    android:fontFamily="@font/materialicons" />
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/mini_app_qr_scanner_title"
-                        android:textStyle="bold"
-                        android:textSize="15sp"
-                        android:textColor="?attr/colorHeading"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/mini_app_qr_scanner_desc"
                         android:textColor="@android:color/darker_gray"
                         android:textSize="12sp"/>
                 </LinearLayout>
