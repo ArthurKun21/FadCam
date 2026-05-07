@@ -17,8 +17,6 @@ import android.provider.MediaStore;
 import android.util.Size;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -76,12 +74,14 @@ public class QRScannerActivity extends AppCompatActivity {
     private ProcessCameraProvider cameraProvider;
     private ImageView ivTorch;
     private boolean torchOn;
-    private View scanLine;
+    private ScanParticleView scanParticles;
     private View resultContainer;
     private TextView rt;
     private TextView ht;
     private View btnCopy;
     private View btnAgain;
+    private View btnShare;
+    private TextView tvFormat;
     private String lastScannedText;
     private String lastScannedFormat;
     private Date lastScannedTime;
@@ -94,12 +94,14 @@ public class QRScannerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_qr_scanner);
         ivTorch = findViewById(R.id.qr_torch);
         ImageView ivClose = findViewById(R.id.qr_close);
-        scanLine = findViewById(R.id.qr_scan_line);
+        scanParticles = findViewById(R.id.qr_scan_line);
         resultContainer = findViewById(R.id.qr_result_container);
         rt = findViewById(R.id.qr_result_text);
         ht = findViewById(R.id.qr_hint_text);
         btnCopy = findViewById(R.id.qr_btn_copy);
         btnAgain = findViewById(R.id.qr_btn_scan_again);
+        btnShare = findViewById(R.id.qr_btn_share);
+        tvFormat = findViewById(R.id.qr_result_format);
 
         if (ivClose != null) ivClose.setOnClickListener(v -> finish());
         if (ivTorch != null) ivTorch.setOnClickListener(v -> toggleTorch());
@@ -286,15 +288,23 @@ public class QRScannerActivity extends AppCompatActivity {
             mp.setOnCompletionListener(android.media.MediaPlayer::release);
         } catch (Exception e) { FLog.w("QRScanner", "Beep failed", e); }
         
-        // Hide scan line
-        if (scanLine != null) { 
-            scanLine.clearAnimation(); 
-            scanLine.setVisibility(View.GONE); 
+        // Stop particle animation
+        if (scanParticles != null) scanParticles.stopAnimation();
+        
+        // Auto turn off torch after successful scan
+        if (torchOn) {
+            mainHandler.postDelayed(this::toggleTorch, 100);
         }
         
+        // Set format badge
+        if (tvFormat != null) {
+            String badge = format.replace("_", " ");
+            tvFormat.setText(badge);
+        }
+
         // Set result text
-        if (rt != null) { 
-            rt.setText(text); 
+        if (rt != null) {
+            rt.setText(text);
         }
         
         // Slide-up animation for result
@@ -308,6 +318,16 @@ public class QRScannerActivity extends AppCompatActivity {
                     .start();
         }
         
+        // Share button
+        if (btnShare != null) {
+            btnShare.setOnClickListener(v -> {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, text);
+                startActivity(Intent.createChooser(shareIntent, null));
+            });
+        }
+
         // Copy button
         if (btnCopy != null) {
             btnCopy.setOnClickListener(v -> {
@@ -539,15 +559,7 @@ public class QRScannerActivity extends AppCompatActivity {
     }
 
     private void startScanLineAnimation() {
-        if (scanLine == null) return;
-        scanLine.setVisibility(View.VISIBLE); 
-        scanLine.clearAnimation();
-        TranslateAnimation anim = new TranslateAnimation(0, 0, -224, 224);
-        anim.setDuration(2200);
-        anim.setRepeatCount(Animation.INFINITE);
-        anim.setRepeatMode(Animation.REVERSE);
-        anim.setInterpolator(new android.view.animation.LinearInterpolator());
-        scanLine.startAnimation(anim);
+        if (scanParticles != null) scanParticles.startAnimation();
     }
 
     private void toggleTorch() {
@@ -565,6 +577,6 @@ public class QRScannerActivity extends AppCompatActivity {
     @Override protected void onDestroy() {
         super.onDestroy();
         cameraExecutor.shutdown();
-        if (scanLine != null) scanLine.clearAnimation();
+        if (scanParticles != null) scanParticles.stopAnimation();
     }
 }

@@ -2365,6 +2365,10 @@ For the smoothest playback experience, you can use an external player like VLC. 
     <string name="button_copy">Copy</string>
     <string name="button_scan_again">Scan Again</string>
     <string name="button_torch">Torch</string>
+    <string name="button_gallery">Browse Gallery</string>
+    <string name="button_share">Share</string>
+    <string name="qr_result_scanned_label">Scanned</string>
+    <string name="qr_info_banner_text">Scanned codes are saved to Records tab automatically</string>
 
     <!-- Pattern Descriptions -->
     <string name="pattern_steady_desc">Continuous steady light for normal flashlight use</string>
