@@ -234,8 +234,8 @@ public class RecordsFragment extends BaseFragment implements
                 FLog.d(TAG, "Applied active filter to " + actualItems.size() + " loaded videos");
 
                 // Update UI visibility
-                updateUiVisibility();
                 isLoading = false;
+                updateUiVisibility();
                 isInitialLoad = false;
                 drainPendingRealtimeRefresh();
 
@@ -2116,8 +2116,8 @@ public class RecordsFragment extends BaseFragment implements
             isInitialLoad = true;
             loadRecordsList();
         } else {
-            FLog.d(TAG, "onFragmentBecameVisible: Data already loaded (" + videoItems.size() + " items)");
-            updateUiVisibility();
+            FLog.d(TAG, "onFragmentBecameVisible: Data already loaded (" + videoItems.size() + " items), re-applying filter");
+            applyActiveFilterToUi(); // Sync adapter with videoItems — it was created empty
         }
     }
 
@@ -5461,9 +5461,9 @@ public class RecordsFragment extends BaseFragment implements
                         }
                         allLoadedItems.clear();
                         allLoadedItems.addAll(normalized);
+                        isLoading = false;
                         applyActiveFilterToUi();
                         updateUiVisibility();
-                        isLoading = false;
                         isInitialLoad = false;
                         drainPendingRealtimeRefresh();
 
