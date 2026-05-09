@@ -26,6 +26,8 @@ import android.animation.ValueAnimator;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.DocumentsContract;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -3651,7 +3653,7 @@ public class RecordsFragment extends BaseFragment implements
         int qr = getMiniAppsSubtypeCount("QR");
         setChipLabelWithCount(chipMiniAppsAll, R.string.records_filter_miniapps_all, all);
         if (chipMiniAppsQR != null) {
-            chipMiniAppsQR.animateSlot("QR (" + qr + ")", 300);
+            chipMiniAppsQR.animateSlot(makeChipLabel("QR", qr), 300);
         }
     }
 
@@ -3788,7 +3790,7 @@ public class RecordsFragment extends BaseFragment implements
         setChipLabelWithCount(chipFilterStream, R.string.records_filter_stream, stream);
         setChipLabelWithCount(chipFilterShot, R.string.records_filter_shot, shot);
         if (chipFilterMiniApps != null) {
-            chipFilterMiniApps.animateSlot("Mini Apps (" + miniapps + ")", 300);
+            chipFilterMiniApps.animateSlot(makeChipLabel("Mini Apps", miniapps), 300);
         }
 
         reorderFilterChipsByCount(camera, screen, faditor, stream, shot, miniapps);
@@ -3829,10 +3831,21 @@ public class RecordsFragment extends BaseFragment implements
 
     private void setChipLabelWithCount(@Nullable com.fadcam.ui.utils.AnimatedChip chip, int baseLabelRes, int count) {
         if (chip == null) return;
-        String newLabel = getString(baseLabelRes) + " (" + count + ")";
-        CharSequence current = chip.getText();
-        if (current != null && current.toString().equals(newLabel)) return;
-        chip.animateSlot(newLabel, 300);
+        chip.animateSlot(makeChipLabel(getString(baseLabelRes), count), 300);
+    }
+
+    /** Builds a SpannableString with pill badge for any chip label + count. */
+    private SpannableString makeChipLabel(String label, int count) {
+        SpannableString ss = new SpannableString(label + "  " + count);
+        int accent = resolveThemeColor(R.attr.colorButton);
+        int shade = android.graphics.Color.rgb(
+                android.graphics.Color.red(accent) + (255 - android.graphics.Color.red(accent)) / 8,
+                android.graphics.Color.green(accent) + (255 - android.graphics.Color.green(accent)) / 8,
+                android.graphics.Color.blue(accent) + (255 - android.graphics.Color.blue(accent)) / 8);
+        float density = getResources().getDisplayMetrics().density;
+        ss.setSpan(new com.fadcam.ui.utils.PillBadgeSpan(shade, 0xFFFFFFFF, density),
+                label.length() + 2, ss.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return ss;
     }
 
     private int getShotSubtypeCount(@NonNull VideoItem.ShotSubtype subtype) {
