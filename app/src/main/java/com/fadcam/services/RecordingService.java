@@ -4687,9 +4687,10 @@ public class RecordingService extends Service {
             }
         }
 
-        // Accuracy is always shown alongside location data (no separate toggle needed)
-        if (sensorDataProvider != null) {
+        // Accuracy — gated behind its own toggle like other GPS features
+        if (sharedPreferencesManager.isAccuracyEnabled() && sensorDataProvider != null) {
             if (!cachedGpsProviderEnabled) {
+                FLog.d(TAG, "Extended: accuracy=GPS is off");
                 sb.append("\nAccuracy: GPS is off");
             } else {
                 float acc = sensorDataProvider.getAccuracy();
