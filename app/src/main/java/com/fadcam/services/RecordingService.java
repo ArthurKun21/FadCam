@@ -4603,9 +4603,18 @@ public class RecordingService extends Service {
             FLog.d(TAG, "📍 Using cached location data (too soon to update)");
         }
         
-        // Show GPS-off message if provider is disabled (consistent with speed/altitude)
+        // Show GPS-off message if provider is disabled — covers location + UTM independently
         if (!cachedGpsProviderEnabled) {
-            return "\nLocation: GPS is off";
+            StringBuilder gpsOffMsg = new StringBuilder("\nLocation: GPS is off");
+            if (sharedPreferencesManager.isUtmEnabled()) {
+                gpsOffMsg.append("\nUTM: GPS is off");
+            }
+            return gpsOffMsg.toString();
+        }
+
+        // GPS just turned on but cache is stale — force immediate refresh
+        if (cachedLocationWatermarkText.isEmpty()) {
+            lastLocationWatermarkUpdateMs = 0;
         }
 
         return cachedLocationWatermarkText;
