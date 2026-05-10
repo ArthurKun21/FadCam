@@ -141,6 +141,11 @@ public class RecordingService extends Service {
     private long lastLocationWatermarkUpdateMs = 0;
     private String cachedLocationWatermarkText = "";
 
+    // Cached GPS provider state — refreshed every 5s to avoid unnecessary system calls
+    private boolean cachedGpsProviderEnabled = false;
+    private long lastGpsProviderCheckMs = 0;
+    private static final long GPS_PROVIDER_CHECK_INTERVAL_MS = 5000;
+
     private RecordingState recordingState = RecordingState.NONE;
     private boolean previewOnlyActive = false;
     private boolean pendingPreviewOnlyStart = false;
@@ -4598,6 +4603,11 @@ public class RecordingService extends Service {
             FLog.d(TAG, "📍 Using cached location data (too soon to update)");
         }
         
+        // Show GPS-off message if provider is disabled (consistent with speed/altitude)
+        if (!cachedGpsProviderEnabled) {
+            return "\nLocation: GPS is off";
+        }
+
         return cachedLocationWatermarkText;
     }
 
@@ -4627,6 +4637,16 @@ public class RecordingService extends Service {
             return "";
         }
 
+        // Throttled GPS provider check — same API as HomeFragment banner, cached for 5s
+        long now = System.currentTimeMillis();
+        if (now - lastGpsProviderCheckMs >= GPS_PROVIDER_CHECK_INTERVAL_MS) {
+            android.location.LocationManager lm = (android.location.LocationManager)
+                    getSystemService(Context.LOCATION_SERVICE);
+            cachedGpsProviderEnabled = lm != null
+                    && lm.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
+            lastGpsProviderCheckMs = now;
+        }
+
         if (locationHelper != null && sensorDataProvider != null) {
             android.location.Location rawLoc = locationHelper.getRawLocation();
             if (rawLoc != null) {
@@ -4637,15 +4657,25 @@ public class RecordingService extends Service {
         StringBuilder sb = new StringBuilder();
 
         if (sharedPreferencesManager.isSpeedEnabled() && sensorDataProvider != null) {
-            float speed = sensorDataProvider.getSpeedKmh();
-            FLog.d(TAG, "Extended: speed=" + speed + " km/h");
-            sb.append("\nSpeed: ").append(String.format("%.0f", speed)).append("km/h");
+            if (!cachedGpsProviderEnabled) {
+                FLog.d(TAG, "Extended: speed=GPS is off");
+                sb.append("\nSpeed: GPS is off");
+            } else {
+                float speed = sensorDataProvider.getSpeedKmh();
+                FLog.d(TAG, "Extended: speed=" + speed + " km/h");
+                sb.append("\nSpeed: ").append(String.format("%.0f", speed)).append(" km/h");
+            }
         }
 
         if (sharedPreferencesManager.isAltitudeEnabled() && sensorDataProvider != null) {
-            double alt = sensorDataProvider.getAltitude();
-            FLog.d(TAG, "Extended: altitude=" + alt + " m");
-            sb.append("\nAlt: ").append(String.format("%.0f", alt)).append("m");
+            if (!cachedGpsProviderEnabled) {
+                FLog.d(TAG, "Extended: altitude=GPS is off");
+                sb.append("\nAlt: GPS is off");
+            } else {
+                double alt = sensorDataProvider.getAltitude();
+                FLog.d(TAG, "Extended: altitude=" + alt + " m");
+                sb.append("\nAlt: ").append(String.format("%.0f", alt)).append("m");
+            }
         }
 
         if (sharedPreferencesManager.isCompassEnabled() && sensorDataProvider != null) {
