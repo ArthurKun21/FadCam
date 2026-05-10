@@ -4687,6 +4687,17 @@ public class RecordingService extends Service {
             }
         }
 
+        // Accuracy is always shown alongside location data (no separate toggle needed)
+        if (sensorDataProvider != null) {
+            if (!cachedGpsProviderEnabled) {
+                sb.append("\nAccuracy: GPS is off");
+            } else {
+                float acc = sensorDataProvider.getAccuracy();
+                FLog.d(TAG, "Extended: accuracy=" + acc + " m");
+                sb.append("\nAccuracy: ").append(String.format("%.0f", acc)).append("m");
+            }
+        }
+
         if (sharedPreferencesManager.isCompassEnabled() && sensorDataProvider != null) {
             String compass = sensorDataProvider.getCompassDirection();
             FLog.d(TAG, "Extended: compass=" + compass);

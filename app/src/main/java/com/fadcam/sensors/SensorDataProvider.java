@@ -145,7 +145,9 @@ public class SensorDataProvider implements SensorEventListener {
                 + ", bearing=" + String.format("%.0f", smoothedBearing)
                 + " (hasBearing=" + location.hasBearing()
                 + ", gps=" + String.format("%.0f", location.getBearing()) + ")"
-                + ", alt=" + String.format("%.1f", location.getAltitude()) + "m");
+                + ", alt=" + String.format("%.1f", location.getAltitude()) + "m"
+                + ", acc=" + (location.hasAccuracy()
+                        ? String.format("%.0f", location.getAccuracy()) + "m" : "none"));
     }
 
     private void updateSpeedFromGps() {
@@ -257,6 +259,13 @@ public class SensorDataProvider implements SensorEventListener {
     public double getAltitude() {
         if (currentLocation != null) {
             return currentLocation.getAltitude();
+        }
+        return 0f;
+    }
+
+    public float getAccuracy() {
+        if (currentLocation != null && currentLocation.hasAccuracy()) {
+            return currentLocation.getAccuracy();
         }
         return 0f;
     }
