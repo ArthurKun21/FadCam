@@ -118,6 +118,8 @@ public class DualCameraRecordingService extends Service {
     private volatile DualCameraState state = DualCameraState.DISABLED;
     private DualCameraConfig config;
     private long recordingStartTime;
+    private long pauseStartedAt;
+    private long accumulatedPausedDurationMs;
 
     // ── Threading ──────────────────────────────────────────────────────
 
@@ -421,6 +423,9 @@ public class DualCameraRecordingService extends Service {
 
         prefs.setRecordingInProgress(false);
         releaseWakeLock();
+        clearRecordingTimelineState();
+        pauseStartedAt = 0;
+        accumulatedPausedDurationMs = 0;
 
         broadcastRecordingComplete(true);
         lastRecordingUriString = null;
@@ -439,7 +444,9 @@ public class DualCameraRecordingService extends Service {
         }
         if (watermarkManager != null) watermarkManager.pauseSensors();
         state = DualCameraState.PAUSED;
-        broadcastAction(Constants.BROADCAST_ON_DUAL_RECORDING_PAUSED);
+        pauseStartedAt = SystemClock.elapsedRealtime();
+        persistRecordingTimelineState();
+        broadcastActionWithTiming(Constants.BROADCAST_ON_DUAL_RECORDING_PAUSED);
         updatePausedNotification();
         FLog.i(TAG, "Dual recording paused");
     }
@@ -455,7 +462,12 @@ public class DualCameraRecordingService extends Service {
         }
         if (watermarkManager != null) watermarkManager.resumeSensors(null);
         state = DualCameraState.RECORDING;
-        broadcastAction(Constants.BROADCAST_ON_DUAL_RECORDING_RESUMED);
+        if (pauseStartedAt > 0L) {
+            accumulatedPausedDurationMs += Math.max(0L, SystemClock.elapsedRealtime() - pauseStartedAt);
+            pauseStartedAt = 0L;
+        }
+        persistRecordingTimelineState();
+        broadcastActionWithTiming(Constants.BROADCAST_ON_DUAL_RECORDING_RESUMED);
         updateResumedNotification();
         FLog.i(TAG, "Dual recording resumed");
     }
@@ -1267,7 +1279,8 @@ public class DualCameraRecordingService extends Service {
                     .putLong(Constants.PREF_RECORDING_START_TIME, recordingStartTime)
                     .commit();
 
-            broadcastAction(Constants.BROADCAST_ON_DUAL_RECORDING_STARTED);
+            persistRecordingTimelineState();
+            broadcastActionWithTiming(Constants.BROADCAST_ON_DUAL_RECORDING_STARTED);
             FLog.i(TAG, "✅ Dual camera recording started");
         } catch (Exception e) {
             FLog.e(TAG, "Failed to start pipeline encoding", e);
@@ -1541,6 +1554,27 @@ public class DualCameraRecordingService extends Service {
         startForegroundNotification();
     }
 
+    // ── Timing persistence ────────────────────────────────────────────
+
+    private void persistRecordingTimelineState() {
+        getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putLong(Constants.PREF_RECORDING_START_TIME, recordingStartTime)
+            .putLong(Constants.PREF_RECORDING_PAUSE_STARTED_AT, pauseStartedAt)
+            .putLong(Constants.PREF_RECORDING_ACCUMULATED_PAUSED_DURATION, accumulatedPausedDurationMs)
+            .commit();
+    }
+
+    private void clearRecordingTimelineState() {
+        getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .remove(Constants.PREF_RECORDING_START_TIME)
+            .remove(Constants.PREF_RECORDING_PAUSE_STARTED_AT)
+            .remove(Constants.PREF_RECORDING_ACCUMULATED_PAUSED_DURATION)
+            .apply();
+        FLog.d(TAG, "Cleared dual recording timeline state");
+    }
+
     // ── Broadcasting ──────────────────────────────────────────────────
 
     /**
@@ -1549,7 +1583,19 @@ public class DualCameraRecordingService extends Service {
      * can receive the events — matching the pattern used by RecordingService.
      */
     private void broadcastAction(@NonNull String action) {
-        sendBroadcast(new Intent(action));
+        Intent intent = new Intent(action);
+        intent.setPackage(getPackageName());
+        sendBroadcast(intent);
+    }
+
+    /** Sends a broadcast with recording timing extras attached. */
+    private void broadcastActionWithTiming(@NonNull String action) {
+        Intent intent = new Intent(action);
+        intent.setPackage(getPackageName());
+        intent.putExtra(Constants.INTENT_EXTRA_RECORDING_START_TIME, recordingStartTime);
+        intent.putExtra(Constants.INTENT_EXTRA_RECORDING_PAUSE_STARTED_AT, pauseStartedAt);
+        intent.putExtra(Constants.INTENT_EXTRA_RECORDING_ACCUMULATED_PAUSED_DURATION, accumulatedPausedDurationMs);
+        sendBroadcast(intent);
     }
 
     private void broadcastError(@NonNull String reason) {
