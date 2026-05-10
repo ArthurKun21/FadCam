@@ -1105,6 +1105,12 @@ public class RecordingService extends Service {
             // (NOT during preview-only mode — prevents mic/sensor memory leaks)
             FLog.d(TAG, "Initializing extended sensor providers for recording");
 
+            // Shared watermark manager (DRY — used by both single and dual camera)
+            if (watermarkManager == null) {
+                watermarkManager = new com.fadcam.watermark.WatermarkManager(this, sharedPreferencesManager);
+            }
+            watermarkManager.initialize(locationHelper);
+
             if (sharedPreferencesManager != null && (sharedPreferencesManager.isSpeedEnabled()
                     || sharedPreferencesManager.isAltitudeEnabled()
                     || sharedPreferencesManager.isCompassEnabled())) {
@@ -1965,6 +1971,12 @@ public class RecordingService extends Service {
                 weatherService = null;
                 FLog.d(TAG, "All extended sensor providers cleaned up");
 
+                // Also destroy shared WatermarkManager
+                if (watermarkManager != null) {
+                    watermarkManager.destroy();
+                    watermarkManager = null;
+                }
+
                 // Final cleanup on the main thread
                 mainHandler.post(() -> {
                     // Release wake lock if held
@@ -2068,6 +2080,7 @@ public class RecordingService extends Service {
             sensorDataProvider.stop();
             FLog.d(TAG, "SensorDataProvider paused with recording");
         }
+        if (watermarkManager != null) watermarkManager.pauseSensors();
         
         setupRecordingResumeNotification();
         showRecordingInPausedToast();
@@ -2105,6 +2118,7 @@ public class RecordingService extends Service {
             sensorDataProvider.start(androidLoc);
             FLog.d(TAG, "SensorDataProvider resumed with recording");
         }
+        if (watermarkManager != null) watermarkManager.resumeSensors(locationHelper);
         
         setupRecordingInProgressNotification();
         showRecordingResumedToast();
@@ -6164,6 +6178,7 @@ public class RecordingService extends Service {
     // Add these fields to RecordingService class
     private GLRecordingPipeline glRecordingPipeline;
     private WatermarkInfoProvider watermarkInfoProvider;
+    private com.fadcam.watermark.WatermarkManager watermarkManager;
     
     // Track current segment file for streaming
     private File currentSegmentFile;
