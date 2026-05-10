@@ -432,6 +432,7 @@ public class DualCameraRecordingService extends Service {
         }
         state = DualCameraState.PAUSED;
         broadcastAction(Constants.BROADCAST_ON_DUAL_RECORDING_PAUSED);
+        updatePausedNotification();
         FLog.i(TAG, "Dual recording paused");
     }
 
@@ -446,6 +447,7 @@ public class DualCameraRecordingService extends Service {
         }
         state = DualCameraState.RECORDING;
         broadcastAction(Constants.BROADCAST_ON_DUAL_RECORDING_RESUMED);
+        updateResumedNotification();
         FLog.i(TAG, "Dual recording resumed");
     }
 
@@ -1359,27 +1361,88 @@ public class DualCameraRecordingService extends Service {
         }
     }
 
-    /** Starts the foreground notification (same channel as RecordingService). */
-    private void startForegroundNotification() {
-        Intent stopIntent = new Intent(this, DualCameraRecordingService.class);
-        stopIntent.setAction(Constants.INTENT_ACTION_STOP_DUAL_RECORDING);
-        PendingIntent stopPendingIntent = PendingIntent.getService(
-                this,
-                2020,
-                stopIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+    /**
+     * Creates the notification channel (same logic as RecordingService).
+     * Must be called before posting notifications so preset-specific channel names work.
+     */
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        try {
+            String channelName = prefs.getNotificationChannelName();
+            android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                    CHANNEL_ID, channelName, android.app.NotificationManager.IMPORTANCE_LOW);
+            channel.setSound(null, null);
+            channel.enableVibration(false);
+            android.app.NotificationManager nm = getSystemService(android.app.NotificationManager.class);
+            if (nm != null) nm.createNotificationChannel(channel);
+        } catch (IllegalArgumentException e) {
+            // Channel already exists with different properties — use as-is
+            FLog.w(TAG, "Notification channel already exists, reusing: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Builds a preset-aware notification for dual camera recording.
+     * Mirrors RecordingService.createBaseNotificationBuilder() logic.
+     */
+    private NotificationCompat.Builder buildDualCameraNotification() {
+        String title = prefs.getNotificationTitle();
+        if (title == null || title.isEmpty()) {
+            title = getString(R.string.notification_video_recording);
+        }
+        String preset = prefs.getNotificationPreset();
+        String text = prefs.getNotificationText(false);
+        if (text == null || text.isEmpty()) {
+            text = "Dual camera recording…";
+        }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification_icon)
-                .setContentTitle(getString(R.string.notification_video_recording))
-                .setContentText("Dual camera recording…")
+                .setContentTitle(title)
+                .setContentText(text)
                 .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .addAction(R.drawable.stop_rounded, getString(R.string.stop_recording), stopPendingIntent);
+                .setSilent(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW);
 
-        Notification notification = builder.build();
+        // Icon based on preset (same icons as RecordingService)
+        int smallIconResId;
+        switch (preset) {
+            case SharedPreferencesManager.NOTIFICATION_PRESET_SYSTEM_UPDATE:
+            case SharedPreferencesManager.NOTIFICATION_PRESET_DOWNLOADING:
+                smallIconResId = android.R.drawable.stat_sys_download;
+                break;
+            case SharedPreferencesManager.NOTIFICATION_PRESET_SYNCING:
+                smallIconResId = android.R.drawable.stat_notify_sync;
+                break;
+            default:
+                smallIconResId = R.drawable.ic_notification_icon;
+                break;
+        }
+        builder.setSmallIcon(smallIconResId);
 
+        // Blank content intent for non-default presets (discretion)
+        if (!SharedPreferencesManager.NOTIFICATION_PRESET_DEFAULT.equals(preset)) {
+            Intent emptyIntent = new Intent();
+            PendingIntent emptyPi = PendingIntent.getActivity(this, 0, emptyIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            builder.setContentIntent(emptyPi);
+        }
+
+        // STOP button — conditionally hidden
+        if (!prefs.isNotificationStopButtonHidden()) {
+            Intent stopIntent = new Intent(this, DualCameraRecordingService.class);
+            stopIntent.setAction(Constants.INTENT_ACTION_STOP_DUAL_RECORDING);
+            PendingIntent stopPi = PendingIntent.getService(this, 2020, stopIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            builder.addAction(R.drawable.stop_rounded, getString(R.string.stop_recording), stopPi);
+        }
+
+        return builder;
+    }
+
+    /** Starts or updates the foreground notification with the current preset settings. */
+    private void startForegroundNotification() {
+        createNotificationChannel();
+        Notification notification = buildDualCameraNotification().build();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
@@ -1387,6 +1450,22 @@ public class DualCameraRecordingService extends Service {
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
+    }
+
+    /** Updates notification text for paused state. */
+    private void updatePausedNotification() {
+        String text = prefs.getNotificationText(true);
+        if (text != null && !text.isEmpty()) {
+            NotificationCompat.Builder builder = buildDualCameraNotification()
+                    .setContentText(text);
+            android.app.NotificationManager nm = getSystemService(android.app.NotificationManager.class);
+            if (nm != null) nm.notify(NOTIFICATION_ID, builder.build());
+        }
+    }
+
+    /** Updates notification text back to recording state. */
+    private void updateResumedNotification() {
+        startForegroundNotification();
     }
 
     // ── Thread management ─────────────────────────────────────────────
