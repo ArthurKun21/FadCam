@@ -171,6 +171,7 @@ public class GLWatermarkRenderer {
     private volatile boolean frameAvailable = false;
     private final Object frameSyncObject = new Object();
     private final float[] latestTexMatrix = new float[16];
+    private final float[] pipLatestTexMatrix = new float[16]; // Saved PiP matrix for full-screen draw when swapped
     private volatile boolean hasLatestTexMatrix = false;
     private volatile boolean suppressWatermarkForSnapshot = false;
 
@@ -659,16 +660,12 @@ public class GLWatermarkRenderer {
                 if (oesTextureId != 0) {
                     GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTextureId);
                 }
-                // Determine which texture is primary based on swap state
-                int primaryTextureId = camerasSwapped ? pipOesTextureId : oesTextureId;
-                if (mFullFrameBlit != null && primaryTextureId == oesTextureId) {
-                    // Normal (unswapped): use standard draw path
+                // Full-screen draw — always uses oesTextureId (which points to the correct
+                // camera after any swap, since swapCameras() exchanges the texture IDs themselves)
+                if (mFullFrameBlit != null) {
                     drawOESTexture(encoderCameraMvp, encoderTexMatrix);
-                } else if (camerasSwapped && mFullFrameBlit != null) {
-                    // Swapped: draw PiP texture as full screen using standard method
-                    drawOESTextureWithId(pipOesTextureId, encoderCameraMvp, encoderTexMatrix);
                 } else {
-                    drawOESTexture(encoderCameraMvp, encoderTexMatrix);
+                    drawWithFallbackMethodId(oesTextureId, encoderCameraMvp, encoderTexMatrix);
                 }
 
                 // Draw PiP overlay (if dual camera mode is active)
@@ -2062,6 +2059,7 @@ public class GLWatermarkRenderer {
         pipSurfaceTexture = new SurfaceTexture(pipOesTextureId);
         pipSurfaceTexture.setDefaultBufferSize(videoWidth, videoHeight);
         pipCameraInputSurface = new Surface(pipSurfaceTexture);
+        android.opengl.Matrix.setIdentityM(pipLatestTexMatrix, 0);
 
         // Set frame available listener on GL thread handler
         pipSurfaceTexture.setOnFrameAvailableListener(surfaceTexture -> {
@@ -2098,12 +2096,31 @@ public class GLWatermarkRenderer {
     }
 
     /**
-     * Swaps primary ↔ PiP camera rendering without changing camera sessions.
-     * The primary camera feed will be shown as PiP and vice versa.
+     * Swaps primary ↔ PiP camera rendering by exchanging SurfaceTextures and textures.
+     * The renderer code stays unchanged — it continues drawing "cameraSurfaceTexture"
+     * full-screen and "pipSurfaceTexture" as PiP, but the underlying textures are swapped.
+     * This is the industry-standard approach: swap the data sources, not the drawing logic.
      */
     public void swapCameras() {
+        if (!pipEnabled || pipSurfaceTexture == null) return;
+
+        // Swap texture IDs
+        int tempTexId = oesTextureId;
+        oesTextureId = pipOesTextureId;
+        pipOesTextureId = tempTexId;
+
+        // Swap SurfaceTextures
+        SurfaceTexture tempST = cameraSurfaceTexture;
+        cameraSurfaceTexture = pipSurfaceTexture;
+        pipSurfaceTexture = tempST;
+
+        // Swap frame-available flags
+        boolean tempAvailable = frameAvailable;
+        frameAvailable = pipFrameAvailable;
+        pipFrameAvailable = tempAvailable;
+
         camerasSwapped = !camerasSwapped;
-        FLog.d(TAG, "Cameras swapped: " + camerasSwapped);
+        FLog.d(TAG, "Cameras swapped (texture-level): " + camerasSwapped);
     }
 
     /**
@@ -2284,14 +2301,12 @@ public class GLWatermarkRenderer {
             return;
         }
 
-        // Determine which texture is primary vs PiP based on swap state
-        int pipTextureId = camerasSwapped ? oesTextureId : pipOesTextureId;
-        SurfaceTexture pipST = camerasSwapped ? cameraSurfaceTexture : pipSurfaceTexture;
-
-        // Get the PiP texture matrix
+        // PiP always draws pipOesTextureId (which points to the correct camera
+        // after any swap, since swapCameras() exchanges the texture IDs themselves)
+        // Get the PiP texture matrix from pipSurfaceTexture
         float[] currentPipTexMatrix = new float[16];
-        if (pipST != null) {
-            pipST.getTransformMatrix(currentPipTexMatrix);
+        if (pipSurfaceTexture != null) {
+            pipSurfaceTexture.getTransformMatrix(currentPipTexMatrix);
         } else {
             Matrix.setIdentityM(currentPipTexMatrix, 0);
         }
@@ -2354,7 +2369,7 @@ public class GLWatermarkRenderer {
 
         // Bind PiP texture
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, pipTextureId);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, pipOesTextureId);
         GLES20.glUniform1i(pipTextureHandle, 0);
 
         // Draw PiP quad
@@ -2409,6 +2424,7 @@ public class GLWatermarkRenderer {
         if (needUpdate) {
             try {
                 pipSurfaceTexture.updateTexImage();
+                pipSurfaceTexture.getTransformMatrix(pipLatestTexMatrix);
             } catch (Exception e) {
                 FLog.w(TAG, "Error updating PiP texture", e);
             }

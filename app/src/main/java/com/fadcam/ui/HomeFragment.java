@@ -5303,7 +5303,6 @@ public class HomeFragment extends BaseFragment {
         CameraType selectedCamera = sharedPreferencesManager.getCameraSelection();
         boolean shouldShow =
             selectedCamera == CameraType.FRONT &&
-            !selectedCamera.isDual() &&
             !getClass().getName().contains("FadRecHomeFragment");
 
         buttonMirrorSwitch.setVisibility(shouldShow ? View.VISIBLE : View.GONE);
