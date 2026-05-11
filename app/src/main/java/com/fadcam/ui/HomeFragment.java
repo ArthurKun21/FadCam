@@ -5285,10 +5285,15 @@ public class HomeFragment extends BaseFragment {
 
     private void pushFrontMirrorToService(boolean enabled) {
         if (!isAdded() || getContext() == null) return;
-        if (!isRecordingOrPaused() && !isMyServiceRunning(RecordingService.class)) {
+        if (!isRecordingOrPaused() && !isMyServiceRunning(RecordingService.class)
+                && !isMyServiceRunning(DualCameraRecordingService.class)) {
             return;
         }
-        Intent intent = new Intent(getContext(), RecordingService.class);
+        // Route to correct service
+        Class<?> targetService = isDualRecordingActive
+                ? DualCameraRecordingService.class
+                : RecordingService.class;
+        Intent intent = new Intent(getContext(), targetService);
         intent.setAction(Constants.INTENT_ACTION_SET_FRONT_VIDEO_MIRROR);
         intent.putExtra(Constants.EXTRA_FRONT_VIDEO_MIRROR_ENABLED, enabled);
         try {

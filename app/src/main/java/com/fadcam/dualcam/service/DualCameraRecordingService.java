@@ -227,6 +227,10 @@ public class DualCameraRecordingService extends Service {
                 handleToggleTorch();
                 break;
 
+            case Constants.INTENT_ACTION_SET_FRONT_VIDEO_MIRROR:
+                handleSetFrontVideoMirror(intent);
+                break;
+
             case Constants.INTENT_ACTION_SET_EXPOSURE_COMPENSATION:
                 handleSetExposureCompensation(intent);
                 break;
@@ -473,8 +477,8 @@ public class DualCameraRecordingService extends Service {
     }
 
     /**
-     * Swap primary ↔ secondary cameras without stopping recording.
-     * The pipeline swaps which texture is rendered full-screen vs PiP.
+     * Swap primary ↔ secondary cameras by closing and recreating capture sessions.
+     * Cameras are reassigned to surfaces so the GL renderer needs no swap logic.
      */
     private void handleSwapCameras() {
         if (state != DualCameraState.RECORDING && state != DualCameraState.PAUSED) {
@@ -482,7 +486,6 @@ public class DualCameraRecordingService extends Service {
             return;
         }
 
-        // Toggle primary in config
         DualCameraConfig.PrimaryCamera newPrimary =
                 (config.getPrimaryCamera() == DualCameraConfig.PrimaryCamera.BACK)
                         ? DualCameraConfig.PrimaryCamera.FRONT
@@ -493,9 +496,38 @@ public class DualCameraRecordingService extends Service {
                 .build();
         prefs.saveDualCameraConfig(config);
 
-        // Tell pipeline to swap rendering order
+        // Notify renderer which camera is now front (for rotation/flip logic)
         if (recordingPipeline != null) {
-            recordingPipeline.swapCameras();
+            recordingPipeline.setFullscreenCameraIsFront(
+                newPrimary == DualCameraConfig.PrimaryCamera.FRONT);
+        }
+
+        // Close existing sessions and stop repeating requests
+        if (primarySession != null) {
+            try { primarySession.stopRepeating(); primarySession.close(); } catch (Exception ignored) {}
+            primarySession = null;
+        }
+        if (secondarySession != null) {
+            try { secondarySession.stopRepeating(); secondarySession.close(); } catch (Exception ignored) {}
+            secondarySession = null;
+        }
+
+        // Swap camera device references
+        CameraDevice tmp = primaryCameraDevice;
+        primaryCameraDevice = secondaryCameraDevice;
+        secondaryCameraDevice = tmp;
+
+        // Recreate sessions: each camera targets the SAME surface as before
+        // (primaryCameraDevice → cameraInputSurface, secondaryCameraDevice → pipCameraInputSurface)
+        if (recordingPipeline != null) {
+            Surface ps = recordingPipeline.getPrimaryCameraInputSurface();
+            Surface ss = recordingPipeline.getSecondaryCameraInputSurface();
+            if (ps != null && primaryCameraDevice != null) {
+                createCaptureSession(primaryCameraDevice, ps, true);
+            }
+            if (ss != null && secondaryCameraDevice != null) {
+                createCaptureSession(secondaryCameraDevice, ss, false);
+            }
         }
 
         broadcastAction(Constants.BROADCAST_ON_DUAL_CAMERAS_SWAPPED);
@@ -569,6 +601,20 @@ public class DualCameraRecordingService extends Service {
         Intent broadcast = new Intent(Constants.BROADCAST_ON_TORCH_STATE_CHANGED);
         broadcast.putExtra(Constants.INTENT_EXTRA_TORCH_STATE, isTorchOn);
         sendBroadcast(broadcast);
+    }
+
+    private void handleSetFrontVideoMirror(Intent intent) {
+        boolean enabled = intent.getBooleanExtra(
+                Constants.EXTRA_FRONT_VIDEO_MIRROR_ENABLED,
+                prefs.isFrontVideoMirrorEnabled());
+        prefs.setFrontVideoMirrorEnabled(enabled);
+        if (recordingPipeline != null) {
+            recordingPipeline.setFrontVideoMirrorEnabled(enabled);
+        }
+        Intent mirrorBcast = new Intent(Constants.BROADCAST_ON_MIRROR_CHANGED);
+        mirrorBcast.putExtra(Constants.EXTRA_MIRROR_ENABLED, enabled);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(mirrorBcast);
+        FLog.i(TAG, "Front video mirror set: " + enabled);
     }
 
     /**

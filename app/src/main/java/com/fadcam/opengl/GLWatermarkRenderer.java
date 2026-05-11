@@ -2114,21 +2114,16 @@ public class GLWatermarkRenderer {
      * the PiP overlay uses the primary camera's texture.
      */
     public void swapCameras() {
-        if (!pipEnabled || pipSurfaceTexture == null) return;
-
-        // Swap texture IDs — renderer always draws oesTextureId fullscreen
-        // and pipOesTextureId as PiP; swapping makes them point to different cameras
-        int tempTexId = oesTextureId;
-        oesTextureId = pipOesTextureId;
-        pipOesTextureId = tempTexId;
-
-        // Swap frame-available flags so each render path waits on the correct camera
-        boolean tempAvailable = frameAvailable;
-        frameAvailable = pipFrameAvailable;
-        pipFrameAvailable = tempAvailable;
-
         camerasSwapped = !camerasSwapped;
-        FLog.d(TAG, "Cameras swapped (texture-level): " + camerasSwapped);
+        FLog.d(TAG, "Cameras swapped: " + camerasSwapped);
+    }
+
+    /** Set by dual camera service when it swaps camera sessions.
+     *  Used by isFullscreenCameraFront() for correct rotation/flip. */
+    private volatile boolean fullscreenCameraIsFront;
+
+    public void setFullscreenCameraIsFront(boolean front) {
+        this.fullscreenCameraIsFront = front;
     }
 
     /**
@@ -2334,6 +2329,11 @@ public class GLWatermarkRenderer {
             pipEncoderTexMatrix = fixedTexMatrix;
         } else {
             pipEncoderTexMatrix = currentPipTexMatrix;
+        }
+
+        // Apply mirror flip for PiP front camera (same logic as fullscreen encoder path)
+        if (pipEnabled && !isFrontCamera() && frontVideoMirrorEnabled) {
+            pipEncoderTexMatrix = applyHorizontalTexFlip(pipEncoderTexMatrix);
         }
 
         // Enable blending for smooth edges on rounded corners
@@ -2714,8 +2714,9 @@ public class GLWatermarkRenderer {
     }
 
     private boolean isFrontCamera() {
+        // For dual camera, use the explicit flag set by session-level swap
+        if (pipEnabled && fullscreenCameraIsFront) return true;
         // Prefer user-selected camera source; sensor orientation alone is not reliable
-        // across OEMs for front/back detection.
         try {
             CameraType selected = SharedPreferencesManager.getInstance(context).getCameraSelection();
             if (selected == CameraType.FRONT) {
