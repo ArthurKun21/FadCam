@@ -1724,6 +1724,7 @@ public class HomeFragment extends BaseFragment {
 
     private void onRecordingResumed() {
         recordingState = RecordingState.IN_PROGRESS;
+        hidePausedOverlay();
 
         buttonPauseResume.setIcon(
             AppCompatResources.getDrawable(
