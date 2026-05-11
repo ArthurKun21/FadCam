@@ -5466,13 +5466,9 @@ public class HomeFragment extends BaseFragment {
             return;
         }
 
-        // Prevent starting if either recording service is already running
-        if (isMyServiceRunning(DualCameraRecordingService.class)) {
-            FLog.w(TAG, "DualCameraRecordingService already running");
-            return;
-        }
-        if (isMyServiceRunning(RecordingService.class)) {
-            FLog.w(TAG, "RecordingService already running, cannot start dual recording");
+        // Prevent starting if a recording is already active
+        if (sharedPreferencesManager.isRecordingInProgress()) {
+            FLog.w(TAG, "A recording is already in progress — cannot start dual recording");
             return;
         }
 
