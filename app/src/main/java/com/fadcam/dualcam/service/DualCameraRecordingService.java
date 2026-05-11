@@ -581,7 +581,9 @@ public class DualCameraRecordingService extends Service {
     // ════════════════════════════════════════════════════════════════════
 
     /**
-     * Toggles the torch (flash) on the primary camera.
+     * Toggles the torch on whichever running camera supports flash.
+     * When the primary camera (e.g. front) lacks hardware flash, the secondary
+     * (back) camera's session is used instead so torch always works.
      */
     private void handleToggleTorch() {
         if (primaryRequestBuilder == null || primarySession == null) {
@@ -589,13 +591,41 @@ public class DualCameraRecordingService extends Service {
             return;
         }
         isTorchOn = !isTorchOn;
-        primaryRequestBuilder.set(CaptureRequest.FLASH_MODE,
+
+        // Determine which camera session supports torch
+        CameraCaptureSession torchSession = primarySession;
+        CaptureRequest.Builder torchBuilder = primaryRequestBuilder;
+        boolean primaryHasFlash = false;
+        try {
+            String primaryId = (config.getPrimaryCamera() == DualCameraConfig.PrimaryCamera.BACK)
+                    ? backCameraId : frontCameraId;
+            CameraCharacteristics chars = cameraManager.getCameraCharacteristics(primaryId);
+            Boolean flashAvail = chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+            primaryHasFlash = (flashAvail != null && flashAvail);
+        } catch (Exception e) {
+            FLog.w(TAG, "Could not check flash availability for primary camera", e);
+        }
+
+        if (!primaryHasFlash && secondarySession != null && secondaryRequestBuilder != null) {
+            torchSession = secondarySession;
+            torchBuilder = secondaryRequestBuilder;
+            FLog.d(TAG, "Primary camera has no flash — using secondary camera torch");
+        }
+
+        torchBuilder.set(CaptureRequest.FLASH_MODE,
                 isTorchOn ? CaptureRequest.FLASH_MODE_TORCH
                           : CaptureRequest.FLASH_MODE_OFF);
-        if (applyPrimaryRepeating()) {
-            FLog.d(TAG, "Torch toggled: " + (isTorchOn ? "ON" : "OFF"));
+
+        try {
+            torchSession.setRepeatingRequest(torchBuilder.build(), null, backgroundHandler);
+            FLog.d(TAG, "Torch toggled: " + (isTorchOn ? "ON" : "OFF")
+                    + " (using " + (torchSession == primarySession ? "primary" : "secondary") + " session)");
+        } catch (CameraAccessException e) {
+            FLog.e(TAG, "Failed to toggle torch", e);
+            isTorchOn = !isTorchOn;
+            return;
         }
-        // Persist and broadcast
+
         prefs.sharedPreferences.edit()
                 .putBoolean(Constants.PREF_TORCH_STATE, isTorchOn).apply();
         Intent broadcast = new Intent(Constants.BROADCAST_ON_TORCH_STATE_CHANGED);
