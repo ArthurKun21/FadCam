@@ -646,7 +646,7 @@ public class GLWatermarkRenderer {
                 encoderTexMatrix = texMatrix;
             }
             float[] encoderCameraMvp = recordingMvpMatrix;
-            if (isFrontCamera() && frontVideoMirrorEnabled) {
+            if (isFullscreenCameraFront() && frontVideoMirrorEnabled) {
                 encoderTexMatrix = applyHorizontalTexFlip(encoderTexMatrix);
             }
 
@@ -661,11 +661,22 @@ public class GLWatermarkRenderer {
                     GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTextureId);
                 }
                 // Full-screen draw — always uses oesTextureId (which points to the correct
-                // camera after any swap, since swapCameras() exchanges the texture IDs themselves)
+                // camera after any swap). When swapped, use pipLatestTexMatrix since the
+                // texture data comes from the PiP camera but encoderTexMatrix is from primary.
+                // Apply mirror flip if the front camera's texture is being shown fullscreen.
+                float[] fsTexMatrix = camerasSwapped ? pipLatestTexMatrix : encoderTexMatrix;
+                // pipLatestTexMatrix is raw from pipSurfaceTexture — apply flip if fullscreen camera is front
+                if (camerasSwapped && isFullscreenCameraFront() && frontVideoMirrorEnabled) {
+                    fsTexMatrix = applyHorizontalTexFlip(fsTexMatrix);
+                }
                 if (mFullFrameBlit != null) {
-                    drawOESTexture(encoderCameraMvp, encoderTexMatrix);
+                    if (!camerasSwapped) {
+                        drawOESTexture(encoderCameraMvp, fsTexMatrix);
+                    } else {
+                        drawOESTextureWithId(oesTextureId, encoderCameraMvp, fsTexMatrix);
+                    }
                 } else {
-                    drawWithFallbackMethodId(oesTextureId, encoderCameraMvp, encoderTexMatrix);
+                    drawWithFallbackMethodId(oesTextureId, encoderCameraMvp, fsTexMatrix);
                 }
 
                 // Draw PiP overlay (if dual camera mode is active)
@@ -864,7 +875,7 @@ public class GLWatermarkRenderer {
                 previewTexMatrix = texMatrix;
             }
             float[] previewCameraMvp = previewMvpMatrix;
-            if (isFrontCamera() && frontVideoMirrorEnabled) {
+            if (isFullscreenCameraFront() && frontVideoMirrorEnabled) {
                 previewTexMatrix = applyHorizontalTexFlip(previewTexMatrix);
             }
 
@@ -2096,25 +2107,22 @@ public class GLWatermarkRenderer {
     }
 
     /**
-     * Swaps primary ↔ PiP camera rendering by exchanging SurfaceTextures and textures.
-     * The renderer code stays unchanged — it continues drawing "cameraSurfaceTexture"
-     * full-screen and "pipSurfaceTexture" as PiP, but the underlying textures are swapped.
-     * This is the industry-standard approach: swap the data sources, not the drawing logic.
+     * Swaps primary ↔ PiP camera rendering by exchanging texture IDs and frame flags.
+     * SurfaceTextures are NOT swapped because the camera sessions write to fixed Surface
+     * objects tied to specific SurfaceTexture producers. Only the texture IDs the renderer
+     * reads from are swapped, so the full-screen draw uses the PiP camera's texture and
+     * the PiP overlay uses the primary camera's texture.
      */
     public void swapCameras() {
         if (!pipEnabled || pipSurfaceTexture == null) return;
 
-        // Swap texture IDs
+        // Swap texture IDs — renderer always draws oesTextureId fullscreen
+        // and pipOesTextureId as PiP; swapping makes them point to different cameras
         int tempTexId = oesTextureId;
         oesTextureId = pipOesTextureId;
         pipOesTextureId = tempTexId;
 
-        // Swap SurfaceTextures
-        SurfaceTexture tempST = cameraSurfaceTexture;
-        cameraSurfaceTexture = pipSurfaceTexture;
-        pipSurfaceTexture = tempST;
-
-        // Swap frame-available flags
+        // Swap frame-available flags so each render path waits on the correct camera
         boolean tempAvailable = frameAvailable;
         frameAvailable = pipFrameAvailable;
         pipFrameAvailable = tempAvailable;
@@ -2302,11 +2310,11 @@ public class GLWatermarkRenderer {
         }
 
         // PiP always draws pipOesTextureId (which points to the correct camera
-        // after any swap, since swapCameras() exchanges the texture IDs themselves)
-        // Get the PiP texture matrix from pipSurfaceTexture
+        // after swap). Use the SurfaceTexture that produced this texture for the matrix.
+        SurfaceTexture pipMatrixST = camerasSwapped ? cameraSurfaceTexture : pipSurfaceTexture;
         float[] currentPipTexMatrix = new float[16];
-        if (pipSurfaceTexture != null) {
-            pipSurfaceTexture.getTransformMatrix(currentPipTexMatrix);
+        if (pipMatrixST != null) {
+            pipMatrixST.getTransformMatrix(currentPipTexMatrix);
         } else {
             Matrix.setIdentityM(currentPipTexMatrix, 0);
         }
@@ -2692,12 +2700,17 @@ public class GLWatermarkRenderer {
         int rotation = (sensorOrientation - displayRotationDegrees + 360) % 360;
         // Keep the same front-camera compensation regardless of flip state.
         // Flip must not alter rotation path; it should only mirror horizontally.
-        if (isFrontCamera()) {
+        if (isFullscreenCameraFront()) {
             rotation = (360 - rotation) % 360;
         }
-        // FLog.d("FAD-ROT", "Device: " + deviceOrientation + " Sensor: " +
-        // sensorOrientation + " ➜ Rotation = " + rotation);
         return rotation;
+    }
+
+    /** Returns true if the camera currently rendered full-screen is front-facing. */
+    private boolean isFullscreenCameraFront() {
+        // In dual camera with swap, the front camera becomes the fullscreen texture
+        if (pipEnabled && camerasSwapped) return true;
+        return isFrontCamera();
     }
 
     private boolean isFrontCamera() {
