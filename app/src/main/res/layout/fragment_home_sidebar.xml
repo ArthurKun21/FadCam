@@ -173,10 +173,10 @@
                             android:textColor="#66BB6A" android:textSize="11sp" android:layout_marginTop="2dp"/>
                     </LinearLayout>
 
-                    <TextView android:layout_width="16dp" android:layout_height="16dp"
-                        android:layout_marginStart="0dp" android:fontFamily="@font/materialicons"
-                        android:text="chevron_right" android:textColor="#FFFFFF"
-                        android:textSize="18sp" android:alpha="0.5"/>
+                    <ImageView android:layout_width="14dp" android:layout_height="14dp"
+                        android:layout_marginStart="12dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:tint="#FFFFFF" android:alpha="0.5"/>
                 </LinearLayout>
             </FrameLayout>
 
@@ -230,10 +230,10 @@
                             android:textColor="#BA68C8" android:textSize="11sp" android:layout_marginTop="2dp"/>
                     </LinearLayout>
 
-                    <TextView android:layout_width="16dp" android:layout_height="16dp"
-                        android:layout_marginStart="0dp" android:fontFamily="@font/materialicons"
-                        android:text="chevron_right" android:textColor="#FFFFFF"
-                        android:textSize="18sp" android:alpha="0.5"/>
+                    <ImageView android:layout_width="14dp" android:layout_height="14dp"
+                        android:layout_marginStart="12dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:tint="#FFFFFF" android:alpha="0.5"/>
                 </LinearLayout>
             </FrameLayout>
 
@@ -287,10 +287,10 @@
                             android:textColor="#FFFFFF" android:textSize="11sp" android:layout_marginTop="2dp"/>
                     </LinearLayout>
 
-                    <TextView android:layout_width="16dp" android:layout_height="16dp"
-                        android:layout_marginStart="0dp" android:fontFamily="@font/materialicons"
-                        android:text="chevron_right" android:textColor="#FFFFFF"
-                        android:textSize="18sp" android:alpha="0.5"/>
+                    <ImageView android:layout_width="14dp" android:layout_height="14dp"
+                        android:layout_marginStart="12dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:tint="#FFFFFF" android:alpha="0.5"/>
         </LinearLayout>
             </FrameLayout>
         </LinearLayout>
