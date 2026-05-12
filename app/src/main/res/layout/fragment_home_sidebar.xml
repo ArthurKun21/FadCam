@@ -40,7 +40,7 @@
 
             <TextView
                 android:layout_width="0dp" android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="1" android:layout_marginStart="4dp"
                 android:text="@string/home_options_title"
                 android:textColor="?attr/pickerTextPrimary"
                 android:textStyle="bold" android:textSize="17sp"/>
@@ -105,6 +105,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:visibility="gone"
+            android:background="@drawable/settings_group_card_bg"
+            android:padding="12dp"
             android:layout_marginTop="12dp"
             android:layout_marginBottom="4dp">
 
@@ -114,27 +116,29 @@
                 android:layout_height="wrap_content"
                 android:text="Update Available"
                 android:textColor="?attr/colorAccent"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold"
                 android:textAllCaps="true"
                 android:letterSpacing="0.08"
-                android:layout_marginStart="0dp"
-                android:layout_marginEnd="0dp"
+                android:gravity="center"
                 android:layout_marginBottom="10dp"/>
 
             <!-- Stable Card -->
-            <com.google.android.material.card.MaterialCardView
+            <FrameLayout
                 android:id="@+id/card_update_stable"
+                android:clipToOutline="true"
+                android:outlineProvider="background"
+                android:background="@drawable/card_bg_stable"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="0dp"
                 android:layout_marginEnd="0dp"
                 android:layout_marginBottom="8dp"
-                app:cardElevation="1dp"
-                app:cardCornerRadius="14dp"
-                app:cardBackgroundColor="#1A3A1A"
-                app:strokeColor="#66BB6A"
-                app:strokeWidth="0.75dp"
+                
+                
+                
+                
+                
                 android:clickable="true"
                 android:focusable="true">
 
@@ -147,39 +151,51 @@
 
                     <TextView android:layout_width="24dp" android:layout_height="24dp"
                         android:layout_marginEnd="10dp" android:fontFamily="@font/materialicons"
-                        android:text="verified" android:textColor="#4CAF50" android:textSize="18sp"
+                        android:text="verified" android:textColor="#FFFFFF" android:textSize="18sp"
                         android:gravity="center"/>
 
                     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:orientation="vertical">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="Stable Release" android:textColor="#4CAF50"
-                            android:textStyle="bold" android:textSize="12sp"/>
-                        <TextView android:id="@+id/tv_stable_version" android:layout_width="wrap_content"
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:orientation="horizontal" android:gravity="center_vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="Stable Release" android:textColor="#FFFFFF"
+                                android:textStyle="bold" android:textSize="12sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="18dp"
+                                android:layout_marginStart="8dp" android:paddingHorizontal="6dp"
+                                android:text="NEW" android:textColor="#FFFFFF"
+                                android:textSize="8sp" android:textStyle="bold"
+                                android:gravity="center"
+                                android:background="@drawable/bg_badge_stable"/>
+                        </LinearLayout>
+                         <TextView android:id="@+id/tv_stable_version" android:layout_width="wrap_content"
                             android:layout_height="wrap_content" android:text="v--  >>  v--"
-                            android:textColor="#81C784" android:textSize="11sp" android:layout_marginTop="2dp"/>
+                            android:textColor="#66BB6A" android:textSize="11sp" android:layout_marginTop="2dp"/>
                     </LinearLayout>
 
                     <TextView android:layout_width="16dp" android:layout_height="16dp"
                         android:layout_marginStart="0dp" android:fontFamily="@font/materialicons"
-                        android:text="chevron_right" android:textColor="#4CAF50"
+                        android:text="chevron_right" android:textColor="#FFFFFF"
                         android:textSize="18sp" android:alpha="0.5"/>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </FrameLayout>
 
             <!-- Beta Card -->
-            <com.google.android.material.card.MaterialCardView
+            <FrameLayout
                 android:id="@+id/card_update_beta"
+                android:clipToOutline="true"
+                android:outlineProvider="background"
+                android:background="@drawable/card_bg_beta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="0dp"
                 android:layout_marginEnd="0dp"
                 android:layout_marginBottom="8dp"
-                app:cardElevation="1dp"
-                app:cardCornerRadius="14dp"
-                app:cardBackgroundColor="#1F1A33"
-                app:strokeColor="#B388FF"
-                app:strokeWidth="0.75dp"
+                
+                
+                
+                
+                
                 android:clickable="true"
                 android:focusable="true">
 
@@ -192,39 +208,51 @@
 
                     <TextView android:layout_width="24dp" android:layout_height="24dp"
                         android:layout_marginEnd="10dp" android:fontFamily="@font/materialicons"
-                        android:text="science" android:textColor="#B39DDB" android:textSize="18sp"
+                        android:text="science" android:textColor="#FFFFFF" android:textSize="18sp"
                         android:gravity="center"/>
 
                     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:orientation="vertical">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="Beta Release" android:textColor="#B39DDB"
-                            android:textStyle="bold" android:textSize="12sp"/>
-                        <TextView android:id="@+id/tv_beta_version" android:layout_width="wrap_content"
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:orientation="horizontal" android:gravity="center_vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="Beta Release" android:textColor="#FFFFFF"
+                                android:textStyle="bold" android:textSize="12sp"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="18dp"
+                                android:layout_marginStart="8dp" android:paddingHorizontal="6dp"
+                                android:text="NEW" android:textColor="#FFFFFF"
+                                android:textSize="8sp" android:textStyle="bold"
+                                android:gravity="center"
+                                android:background="@drawable/bg_badge_beta"/>
+                        </LinearLayout>
+                         <TextView android:id="@+id/tv_beta_version" android:layout_width="wrap_content"
                             android:layout_height="wrap_content" android:text="v--  >>  v--"
-                            android:textColor="#D1C4E9" android:textSize="11sp" android:layout_marginTop="2dp"/>
+                            android:textColor="#BA68C8" android:textSize="11sp" android:layout_marginTop="2dp"/>
                     </LinearLayout>
 
                     <TextView android:layout_width="16dp" android:layout_height="16dp"
                         android:layout_marginStart="0dp" android:fontFamily="@font/materialicons"
-                        android:text="chevron_right" android:textColor="#B39DDB"
+                        android:text="chevron_right" android:textColor="#FFFFFF"
                         android:textSize="18sp" android:alpha="0.5"/>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </FrameLayout>
 
             <!-- Pro Card -->
-            <com.google.android.material.card.MaterialCardView
+            <FrameLayout
                 android:id="@+id/card_update_pro"
+                android:clipToOutline="true"
+                android:outlineProvider="background"
+                android:background="@drawable/card_bg_pro"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="0dp"
                 android:layout_marginEnd="0dp"
                 android:layout_marginBottom="8dp"
-                app:cardElevation="1dp"
-                app:cardCornerRadius="14dp"
-                app:cardBackgroundColor="#332B00"
-                app:strokeColor="#FFB300"
-                app:strokeWidth="0.75dp"
+                
+                
+                
+                
+                
                 android:clickable="true"
                 android:focusable="true">
 
@@ -235,35 +263,36 @@
                     android:gravity="center_vertical"
                     android:paddingStart="14dp" android:paddingEnd="12dp" android:paddingTop="12dp" android:paddingBottom="12dp">
 
-                    <TextView android:layout_width="24dp" android:layout_height="24dp"
-                        android:layout_marginEnd="10dp" android:fontFamily="@font/materialicons"
-                        android:text="stars" android:textColor="#FFB300" android:textSize="18sp"
-                        android:gravity="center"/>
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp"
+                        android:layout_marginEnd="10dp"
+                        android:src="@drawable/ic_crown" android:tint="#FFFFFF"
+                        android:scaleType="centerInside"/>
 
                     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:orientation="vertical">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="FadCam Pro" android:textColor="#FFB300"
-                            android:textStyle="bold" android:textSize="12sp"/>
-                        <TextView android:id="@+id/tv_pro_version" android:layout_width="wrap_content"
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:orientation="horizontal" android:gravity="center_vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="FadCam Pro" android:textColor="#FFFFFF"
+                                android:textStyle="bold" android:textSize="12sp"/>
+                             <TextView android:layout_width="wrap_content" android:layout_height="18dp"
+                                android:layout_marginStart="8dp" android:paddingHorizontal="6dp"
+                                android:text="NEW" android:textColor="#1A1A1A"
+                                android:textSize="8sp" android:textStyle="bold"
+                                android:gravity="center"
+                                android:background="@drawable/bg_badge_pro"/>
+                        </LinearLayout>
+                          <TextView android:id="@+id/tv_pro_version" android:layout_width="wrap_content"
                             android:layout_height="wrap_content" android:text="v--  >>  v--"
-                            android:textColor="#FFD54F" android:textSize="11sp" android:layout_marginTop="2dp"/>
+                            android:textColor="#FFFFFF" android:textSize="11sp" android:layout_marginTop="2dp"/>
                     </LinearLayout>
 
                     <TextView android:layout_width="16dp" android:layout_height="16dp"
                         android:layout_marginStart="0dp" android:fontFamily="@font/materialicons"
-                        android:text="chevron_right" android:textColor="#FFB300"
+                        android:text="chevron_right" android:textColor="#FFFFFF"
                         android:textSize="18sp" android:alpha="0.5"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.divider.MaterialDivider
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginStart="0dp"
-                android:layout_marginEnd="0dp"
-                app:dividerColor="#262626"/>
+        </LinearLayout>
+            </FrameLayout>
         </LinearLayout>
 
         <!-- Group: Display Settings -->

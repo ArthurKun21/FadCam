@@ -506,20 +506,29 @@ public class HomeSidebarFragment extends DialogFragment {
     }
 
     private void setupCard(View v, int cardId, int verId, String cur, String latest, Runnable onClick) {
-        com.google.android.material.card.MaterialCardView c = v.findViewById(cardId);
+        View c = v.findViewById(cardId);
         android.widget.TextView t = v.findViewById(verId);
         if (c == null || t == null) return;
-        // Red for current, green for latest
         String text = "v" + cur + "  >>  v" + latest;
         android.text.SpannableString sp = new android.text.SpannableString(text);
         int curEnd = ("v" + cur).length();
-        sp.setSpan(new android.text.style.ForegroundColorSpan(0xFFEF5350), 0, curEnd, 0);
-        sp.setSpan(new android.text.style.ForegroundColorSpan(0xFF81C784), curEnd, text.length(), 0);
+        
+        // Determine colors based on card type
+        int currentColor = 0xFFFF5252; // Default red for current version
+        int newColor = 0xFF66BB6A;     // Default green for new version
+        
+        if (cardId == R.id.card_update_pro) {
+            currentColor = 0xFFFFFFFF;  // White for Pro current version
+            newColor = 0xFFFFD700;      // Gold for Pro new version
+        }
+        
+        sp.setSpan(new android.text.style.ForegroundColorSpan(currentColor), 0, curEnd, 0);
+        sp.setSpan(new android.text.style.ForegroundColorSpan(newColor), curEnd, text.length(), 0);
         t.setText(sp);
         c.setVisibility(View.VISIBLE);
         c.setOnClickListener(ignored -> onClick.run());
-        if (c.getChildCount() > 0) {
-            com.fadcam.utils.ShimmerEffectHelper.applyShimmerEffect(c.getChildAt(0));
+        if (c instanceof android.view.ViewGroup && ((android.view.ViewGroup)c).getChildCount() > 0) {
+            com.fadcam.utils.ShimmerEffectHelper.applyShimmerEffect(((android.view.ViewGroup)c).getChildAt(0));
         }
     }
 

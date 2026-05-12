@@ -63,7 +63,7 @@ public class ProUpdateBottomSheet extends BottomSheetDialogFragment {
             String text = "v" + cur + "  >>  v" + ver;
             android.text.SpannableString sp = new android.text.SpannableString(text);
             int curEnd = ("v" + cur).length();
-            sp.setSpan(new android.text.style.ForegroundColorSpan(0xFFEF5350), 0, curEnd, 0);
+            sp.setSpan(new android.text.style.ForegroundColorSpan(0xFFFFFFFF), 0, curEnd, 0);
             sp.setSpan(new android.text.style.ForegroundColorSpan(0xFFFFB300), curEnd, text.length(), 0);
             tvVer.setText(sp);
         }
