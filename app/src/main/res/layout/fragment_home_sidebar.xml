@@ -154,23 +154,24 @@
                         android:text="verified" android:textColor="#FFFFFF" android:textSize="18sp"
                         android:gravity="center"/>
 
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+<LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:orientation="vertical">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                             android:orientation="horizontal" android:gravity="center_vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                                android:layout_weight="1"
                                 android:text="Stable Release" android:textColor="#FFFFFF"
                                 android:textStyle="bold" android:textSize="12sp"/>
-                            <TextView android:layout_width="wrap_content" android:layout_height="18dp"
-                                android:layout_marginStart="8dp" android:paddingHorizontal="6dp"
+                            <TextView android:layout_width="wrap_content" android:layout_height="16dp"
+                                android:layout_marginStart="6dp" android:paddingHorizontal="6dp"
                                 android:text="NEW" android:textColor="#FFFFFF"
                                 android:textSize="8sp" android:textStyle="bold"
                                 android:gravity="center"
                                 android:background="@drawable/bg_badge_stable"/>
                         </LinearLayout>
-                         <TextView android:id="@+id/tv_stable_version" android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" android:text="v--  >>  v--"
-                            android:textColor="#66BB6A" android:textSize="11sp" android:layout_marginTop="2dp"/>
+                          <TextView android:id="@+id/tv_stable_version" android:layout_width="wrap_content"
+                             android:layout_height="wrap_content" android:text="v--  >>  v--"
+                             android:textColor="#66BB6A" android:textSize="11sp" android:layout_marginTop="2dp"/>
                     </LinearLayout>
 
                     <ImageView android:layout_width="14dp" android:layout_height="14dp"
@@ -211,23 +212,24 @@
                         android:text="science" android:textColor="#FFFFFF" android:textSize="18sp"
                         android:gravity="center"/>
 
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+<LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:orientation="vertical">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                             android:orientation="horizontal" android:gravity="center_vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                                android:layout_weight="1"
                                 android:text="Beta Release" android:textColor="#FFFFFF"
                                 android:textStyle="bold" android:textSize="12sp"/>
-                            <TextView android:layout_width="wrap_content" android:layout_height="18dp"
-                                android:layout_marginStart="8dp" android:paddingHorizontal="6dp"
+                            <TextView android:layout_width="wrap_content" android:layout_height="16dp"
+                                android:layout_marginStart="6dp" android:paddingHorizontal="6dp"
                                 android:text="NEW" android:textColor="#FFFFFF"
                                 android:textSize="8sp" android:textStyle="bold"
                                 android:gravity="center"
                                 android:background="@drawable/bg_badge_beta"/>
                         </LinearLayout>
-                         <TextView android:id="@+id/tv_beta_version" android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" android:text="v--  >>  v--"
-                            android:textColor="#BA68C8" android:textSize="11sp" android:layout_marginTop="2dp"/>
+                          <TextView android:id="@+id/tv_beta_version" android:layout_width="wrap_content"
+                             android:layout_height="wrap_content" android:text="v--  >>  v--"
+                             android:textColor="#BA68C8" android:textSize="11sp" android:layout_marginTop="2dp"/>
                     </LinearLayout>
 
                     <ImageView android:layout_width="14dp" android:layout_height="14dp"
@@ -270,13 +272,14 @@
 
                     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:orientation="vertical">
-                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                             android:orientation="horizontal" android:gravity="center_vertical">
-                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                                android:layout_weight="1"
                                 android:text="FadCam Pro" android:textColor="#FFFFFF"
                                 android:textStyle="bold" android:textSize="12sp"/>
-                             <TextView android:layout_width="wrap_content" android:layout_height="18dp"
-                                android:layout_marginStart="8dp" android:paddingHorizontal="6dp"
+                             <TextView android:layout_width="wrap_content" android:layout_height="16dp"
+                                android:layout_marginStart="6dp" android:paddingHorizontal="6dp"
                                 android:text="NEW" android:textColor="#1A1A1A"
                                 android:textSize="8sp" android:textStyle="bold"
                                 android:gravity="center"
