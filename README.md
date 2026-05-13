@@ -27,6 +27,8 @@
 
 **Privacy-focused Android multimedia suite: background video recording, dashcam, screen recorder, live streaming & remote control - ad-free & open-source.**
 
+<a href="https://trendshift.io/repositories/12830" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12830" alt="anonfaded%2FFadCam | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+
 [![GitHub all releases](https://img.shields.io/github/downloads/anonfaded/FadCam/total?label=Downloads&logo=github)](https://github.com/anonfaded/FadCam/releases/)
 [![SourceForge Downloads](https://img.shields.io/sourceforge/dt/fadcam.svg?label=SourceForge%20Downloads&color=red)](https://sourceforge.net/projects/fadcam/files/latest/download)
 [<img src="https://shields.rbtlog.dev/simple/com.fadcam" alt="badge">](https://shields.rbtlog.dev/com.fadcam)
